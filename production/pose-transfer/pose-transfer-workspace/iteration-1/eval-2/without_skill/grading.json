@@ -1,0 +1,27 @@
+{
+  "eval_id": 2,
+  "eval_name": "sitting-chin-rest-pose",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "pelvis, thigh, calf bone values specified for sitting pose",
+      "passed": true,
+      "evidence": "thigh_l/r X:80, calf_l/r X:-90 in table format with descriptions"
+    },
+    {
+      "text": "upperarm, lowerarm, hand values for chin-resting arm specified",
+      "passed": true,
+      "evidence": "upperarm_r [45,-20,30], lowerarm_r [80,0,-10], hand_r [-10,0,20] - detailed table"
+    },
+    {
+      "text": "ControlNet strength recommendation with specific value and reasoning",
+      "passed": true,
+      "evidence": "0.65-0.80 range; 0.65 as start, 0.75-0.80 for complex arm positions"
+    },
+    {
+      "text": "Additional tips specific to sitting pose (chair prompt, hand warnings)",
+      "passed": false,
+      "evidence": "No mention of needing chair in prompt, no hand-specific warnings for this pose"
+    }
+  ]
+}

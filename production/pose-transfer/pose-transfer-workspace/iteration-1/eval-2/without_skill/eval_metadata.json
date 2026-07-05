@@ -1,0 +1,11 @@
+{
+  "eval_id": 2,
+  "eval_name": "sitting-chin-rest-pose",
+  "prompt": "I want to create a pose in VNCCS_PoseStudio where the character is sitting on a chair resting their chin on their hand. Which bones do I adjust and how? Also what ControlNet strength should I use?",
+  "assertions": [
+    {"text": "pelvis, thigh, calf bone values specified for sitting pose", "passed": true, "evidence": "thigh X:80, calf X:-90 in table"},
+    {"text": "upperarm, lowerarm, hand values for chin-resting arm specified", "passed": true, "evidence": "Detailed table with all arm bones"},
+    {"text": "ControlNet strength recommendation with specific value and reasoning", "passed": true, "evidence": "0.65-0.80 range with reasoning"},
+    {"text": "Additional tips specific to sitting pose", "passed": false, "evidence": "No chair prompt or hand warnings"}
+  ]
+}

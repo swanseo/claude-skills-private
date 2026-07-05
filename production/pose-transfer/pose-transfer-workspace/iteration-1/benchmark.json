@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "skill_name": "pose-transfer",
+    "skill_path": "C:\\Users\\PC\\.claude\\skills\\pose-transfer",
+    "executor_model": "claude-sonnet-4-6",
+    "timestamp": "2026-06-12",
+    "evals_run": ["ballet-pose-transfer", "sitting-chin-rest-pose", "fix-bad-hands-wrong-face"],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "config": "with_skill",
+      "label": "With pose-transfer skill",
+      "evals": [
+        {"id": 1, "name": "ballet-pose-transfer",    "pass_rate": 1.00, "passed": 5, "total": 5, "duration_s": 126.2, "tokens": 32422},
+        {"id": 2, "name": "sitting-chin-rest-pose",  "pass_rate": 1.00, "passed": 4, "total": 4, "duration_s":  71.6, "tokens": 24839},
+        {"id": 3, "name": "fix-bad-hands-wrong-face","pass_rate": 1.00, "passed": 5, "total": 5, "duration_s":  83.0, "tokens": 28773}
+      ],
+      "summary": {"mean_pass_rate": 1.00, "mean_duration_s": 93.6, "mean_tokens": 28678, "total_passed": 14, "total_assertions": 14}
+    },
+    {
+      "config": "without_skill",
+      "label": "Baseline (no skill)",
+      "evals": [
+        {"id": 1, "name": "ballet-pose-transfer",    "pass_rate": 0.60, "passed": 3, "total": 5, "duration_s":  74.5, "tokens": 26008},
+        {"id": 2, "name": "sitting-chin-rest-pose",  "pass_rate": 0.75, "passed": 3, "total": 4, "duration_s":  59.0, "tokens": 19994},
+        {"id": 3, "name": "fix-bad-hands-wrong-face","pass_rate": 0.40, "passed": 2, "total": 5, "duration_s":  52.8, "tokens": 24391}
+      ],
+      "summary": {"mean_pass_rate": 0.583, "mean_duration_s": 62.1, "mean_tokens": 23464, "total_passed": 8, "total_assertions": 14}
+    }
+  ],
+  "run_summary": {
+    "delta": {
+      "pass_rate": "+41.7%",
+      "time_seconds": "+31.5s",
+      "tokens": "+5214"
+    }
+  },
+  "notes": [
+    "With skill 100% vs baseline 58.3% - delta 41.7pp",
+    "Eval 3 biggest gap (100% vs 40%): hand bone adjustment and user_prompt sync not mentioned without skill",
+    "Eval 2 baseline scored 75% - bone list was given in the prompt context",
+    "Skill responses 51% slower and 22% more tokens - cost of more detailed answers",
+    "Key differentiators: node ID references, user_prompt sync knowledge, pose-specific bone JSON values"
+  ]
+}

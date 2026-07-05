@@ -1,0 +1,32 @@
+{
+  "eval_id": 3,
+  "eval_name": "fix-bad-hands-wrong-face",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "hand_l/r and lowerarm bone adjustment values provided for fixing hands",
+      "passed": false,
+      "evidence": "No bone adjustment mentioned. Focuses on negative prompt and DWPreprocessor resolution only"
+    },
+    {
+      "text": "ControlNet end_percent adjustment suggested to fix hands",
+      "passed": true,
+      "evidence": "end_percent 1.0 -> 0.75 mentioned"
+    },
+    {
+      "text": "Specific prompt improvement tags for face and CFG scale adjustment",
+      "passed": true,
+      "evidence": "CFG 7.0->8.5-9.0, face description prompts, hand negative prompts"
+    },
+    {
+      "text": "user_prompt sync with node ID 6 mentioned",
+      "passed": false,
+      "evidence": "No mention of user_prompt field in VNCCS_PoseStudio node needing sync"
+    },
+    {
+      "text": "Ordered action list for applying fixes",
+      "passed": false,
+      "evidence": "Fixes listed as separate sections, no explicit numbered action sequence"
+    }
+  ]
+}

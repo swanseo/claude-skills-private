@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "pose-transfer", "runs": [{"id": "eval-1-with_skill", "prompt": "A reference image of a ballet dancer lifting one leg high with arms spread wide. I want to apply this pose to a 20s female anime character in a blue dress and generate with SDXL. How do I do this?", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "# \ubc1c\ub808 \ub304\uc11c \ud3ec\uc988 \uc804\uc774 \uac00\uc774\ub4dc: \ud30c\ub780 \ub4dc\ub808\uc2a4 \uc560\ub2c8\uba54\uc774\uc158 \uce90\ub9ad\ud130 (SDXL)\n\n**\uc6cc\ud06c\ud50c\ub85c\uc6b0:** `VNCCS_PoseStudio_Local_SDXL.json`\n**\ud504\ub85c\uc81d\ud2b8 \uacbd\ub85c:** `E:\\AI-work\\pose-studio\\`\n\n---\n\n## Step 1: \ud3ec\uc988 \ub808\ud37c\ub7f0\uc2a4 \uc774\ubbf8\uc9c0 \ubd84\uc11d\n\n\uc2e4\uc81c \uc774\ubbf8\uc9c0\uac00 \uc5c6\uc73c\ubbc0\ub85c, \"\ubc1c\ub808 \ub304\uc11c\uac00 \ud55c\ucabd \ub2e4\ub9ac\ub97c \ub192\uc774 \ub4e4\uc5b4\uc62c\ub9ac\uace0 \ud314\uc744 \ubc8c\ub9b0 \ud3ec\uc988\"\ub97c \uae30\ubc18\uc73c\ub85c \ubd84\uc11d\ud55c\ub2e4.\n\n### \uc608\uc0c1 \ud3ec\uc988 \uc694\uc57d\n\n> \uc624\ub978\ucabd \ub2e4\ub9ac(\ub610\ub294 \uc67c\ucabd \ub2e4\ub9ac)\ub97c 90\ub3c4 \uc774\uc0c1 \uc606\uc73c\ub85c \ub192\uc774 \ub4e4\uc5b4\uc62c\ub9b0 \uc790\uc138 (\uc544\ub77c\ubca0\uc2a4\ud06c \ub610\ub294 \uadf8\ub791 \ubc14\ud2b8\ub9dd \ubcc0\ud615).  \n> \uc591\ud314\uc744 \uc88c\uc6b0\ub85c \ud06c\uac8c \ubc8c\ub824 \uc218\ud3c9\uc5d0 \uac00\uae5d\uac8c \ud3bc\uce5c \uc0c1\ud0dc.  \n> \ucc99\ucd94\ub294 \uace7\uac8c \uc138\uc6b0\uac70\ub098 \uc0b4\uc9dd \ub4a4\ub85c \uc816\ud78c \ud615\ud0dc (\ubc1c\ub808 \ud2b9\uc720\uc758 \uc5d0\ub808\ud06c\ud2b8 \uc790\uc138).  \n> \uace8\ubc18\uc740 \ub4e4\uc5b4\uc62c\ub9b0 \ub2e4\ub9ac \ubc29\ud5a5\uc73c\ub85c \uc57d\uac04 \uae30\uc6b8\uc5b4\uc9d0.  \n> \uce74\uba54\ub77c \uc575\uae00: \uc815\uba74 \ub610\ub294 \uc0b4\uc9dd 3/4\ubdf0.  \n> \uba38\ub9ac\ub294 \uc815\uba74\uc744 \ud5a5\ud558\uac70\ub098 \ud314 \ubc29\ud5a5\uc744 \ub530\ub77c \uc57d\uac04 \uce21\uba74\uc744 \ubc14\ub77c\ubd04.\n\n### VNCCS_PoseStudio \uc7ac\ud604 \uc2dc \uc8fc\uc758\uc810\n\n- \ub2e4\ub9ac\ub97c 90\ub3c4 \uc774\uc0c1 \ub4e4\uc5b4\uc62c\ub9ac\ub294 \uacbd\uc6b0 `thigh_l` \ub610\ub294 `thigh_r` \ubcf8\uc758 Z\ucd95\uc744 \uadf9\ub2e8\uc801\uc73c\ub85c \uc870\uc815\ud574\uc57c \ud558\uba70, \uace8\ubc18(`pelvis`)\uc774 \uc5f0\ub3d9\ud558\uc5ec \uae30\uc6b8\uc5b4\uc9c4\ub2e4.\n- \ud314\uc744 \uc88c\uc6b0\ub85c \uc644\uc804\ud788 \ud3bc\uce5c \ub3d9\uc791\uc740 DWPose\uac00 \ube44\uad50\uc801 \uc798 \uc778\uc2dd\ud558\ubbc0\ub85c ControlNet \ud6a8\uacfc\uac00 \uc798 \ub098\ud0c0\ub09c\ub2e4.\n- \ubc1c\ub808 \ud3ec\uc988 \ud2b9\uc720\uc758 \ubc1c\ub05d(\ud3ec\uc778\ud2b8 \ubc1c) \ub3d9\uc791\uc740 `foot_l/r` \ubcf8\uc744 Z\ucd95\uc73c\ub85c \uc870\uc815\ud574\uc57c \ud558\uba70, DWPose\uac00 \ubc1c\ub05d \uc138\ubd80\ub97c \ubabb \uc7a1\uc744 \uc218 \uc788\uc73c\ub2c8 \ud504\ub86c\ud504\ud2b8 \ubcf4\uc644\uc774 \ud544\uc694\ud558\ub2e4.\n- \ub4e4\uc5b4\uc62c\ub9b0 \ub2e4\ub9ac\uac00 \uce74\uba54\ub77c \ubc29\ud5a5\uc73c\ub85c \uc2ec\ud55c \uc6d0\uadfc\uac10(foreshortening)\uc744 \ub9cc\ub4e4\uc9c0 \uc54a\ub3c4\ub85d, \uce74\uba54\ub77c\ub97c \uc815\uba74(`cam_yaw_deg: 0`)\uc73c\ub85c \uc720\uc9c0\ud558\ub294 \uac83\uc744 \uad8c\uc7a5\ud55c\ub2e4.\n\n---\n\n## Step 2: VNCCS_PoseStudio \ubcf8(Bone) \uc870\uc815 \uad8c\uc7a5\uac12\n\n\uc544\ub798\ub294 \"\uc624\ub978\ucabd \ub2e4\ub9ac\ub97c \ub192\uc774 \ub4e4\uc5b4 \uc88c\uce21\uc73c\ub85c \ubed7\uace0, \uc591\ud314\uc744 \uc88c\uc6b0\ub85c \ubc8c\ub9b0 \ubc1c\ub808 \ud3ec\uc988\" \uae30\uc900\uc758 \ubcf8 \uc870\uc815\uac12\uc774\ub2e4.  \n\uac01\ub3c4\ub294 **[X(\uc804\ud6c4 \uae30\uc6b8\uae30), Y(\uc88c\uc6b0 \ube44\ud2c0\uae30), Z(\ub4e4\uc5b4\uc62c\ub9ac\uae30/\ub0b4\ub9ac\uae30)]** \ud615\ud0dc.\n\n```json\n{\n  \"pelvis\":       [5,  0,  12],\n  \"spine_01\":     [5,  0,   0],\n  \"spine_02\":     [5,  0,   0],\n  \"spine_03\":    [-5,  0,   0],\n  \"neck_01\":      [0,  0,   0],\n  \"head\":         [0,  5,   0],\n\n  \"clavicle_l\":   [0,  0,  10],\n  \"clavicle_r\":   [0,  0, -10],\n  \"upperarm_l\":   [0,  0,  80],\n  \"upperarm_r\":   [0,  0, -80],\n  \"lowerarm_l\":  [-10, 0,  10],\n  \"lowerarm_r\":  [-10, 0, -10],\n  \"hand_l\":       [0,  0,  10],\n  \"hand_r\":       [0,  0, -10],\n\n  \"thigh_l\":      [0,  0,  15],\n  \"thigh_r\":      [0,  0,  95],\n  \"calf_l\":       [5,  0,   0],\n  \"calf_r\":      [-5,  0,   0],\n  \"foot_l\":     [-30,  0,   0],\n  \"foot_r\":     [-30,  0,   0]\n}\n```\n\n### \uc870\uc815 \ud3ec\uc778\ud2b8 \uc124\uba85\n\n| \ubcf8 | \uc870\uc815 \uc124\uba85 |\n|----|-----------|\n| `pelvis` | \uc624\ub978\ucabd \ub2e4\ub9ac\uac00 \uc62c\ub77c\uac00\ubbc0\ub85c \uace8\ubc18\uc774 \uc6b0\uce21\uc73c\ub85c \uc57d 12\ub3c4 \uae30\uc6b8\uc5b4\uc9d0 |\n| `spine_01/02` | \ubc1c\ub808 \ud2b9\uc720\uc758 \uac00\uc2b4\uc744 \uc0b4\uc9dd \uc55e\uc73c\ub85c \ub0b4\ubbfc \uc790\uc138 (5\ub3c4 \uc804\ubc29 \uae30\uc6b8\uae30) |\n| `spine_03` | \ud749\ucd94 \uc0c1\ubd80\ub294 \uc5ed\ubc29\ud5a5\uc73c\ub85c \ubbf8\uc138 \uc870\uc815\ud574 \uc5d0\ub808\ud06c\ud2b8 \uc790\uc138 \uc720\uc9c0 |\n| `upperarm_l/r` | \uc591\ud314\uc744 \uc88c\uc6b0\ub85c 80\ub3c4 \ub4e4\uc5b4\uc62c\ub824 \uc218\ud3c9\uc5d0 \uac00\uae5d\uac8c \ubc8c\ub9bc |\n| `thigh_r` | \uc624\ub978\ucabd \ub2e4\ub9ac\ub97c \uc606\uc73c\ub85c 95\ub3c4 \ub4e4\uc5b4\uc62c\ub9bc (\uadf8\ub791 \ubc14\ud2b8\ub9dd \uc544 \ub77c \uc2a4\ucf69\ub4dc) |\n| `thigh_l` | \uc67c\ucabd \uc9c0\uc9c0 \ub2e4\ub9ac\ub294 \uc57d\uac04 \ubc14\uae65\ucabd \ud134\uc544\uc6c3 (15\ub3c4) |\n| `foot_l/r` | \ubc1c\ub05d \ud3ec\uc778\ud2b8\ub97c \uc704\ud574 Z\uac00 \uc544\ub2cc X\ucd95\uc73c\ub85c -30\ub3c4 (\ubc1c\ub4f1 \ud3b4\uae30) |\n\n> **\ud301:** \uba3c\uc800 `thigh_r` Z\ucd95\uc744 95\ub85c \uc124\uc815\ud55c \ub4a4 \uace8\ubc18(`pelvis`) Z\ucd95\uc744 \ubbf8\uc138\uc870\uc815\ud558\uba74\uc11c \uc790\uc5f0\uc2a4\ub7ec\uc6b4 \uade0\ud615\uc744 \ucc3e\uc544\ub77c. \ub9c8\ub124\ud0b9\uc774 \ub118\uc5b4\uc9c0\ub294 \ub290\ub08c\uc774 \ub4e4\uba74 `pelvis` X\ucd95\uc744 \uc55e\uc73c\ub85c \uc870\uae08 \ub354 \uc62c\ub824\ub77c.\n\n---\n\n## Step 3: \ud3ec\uc988 \ucea1\ucc98 \ubc29\ubc95 (\ub808\ud37c\ub7f0\uc2a4 \uc774\ubbf8\uc9c0 \ud65c\uc6a9)\n\n\uc2e4\uc81c \ubc1c\ub808 \ub304\uc11c \ub808\ud37c\ub7f0\uc2a4 \uc774\ubbf8\uc9c0\uac00 \uc788\ub294 \uacbd\uc6b0:\n\n1. \uc774\ubbf8\uc9c0\ub97c `E:\\AI-work\\ComfyUI\\input\\` \ud3f4\ub354\uc5d0 \ubcf5\uc0ac\ud55c\ub2e4.\n2. `VNCCS_PoseStudio_Local_SDXL.json`\uc5d0\uc11c **\ub178\ub4dc ID 1** (LoadImage, title: \"Pose Capture (Reference)\")\uc758 `mode`\ub97c `4`\uc5d0\uc11c `0`\uc73c\ub85c \ubcc0\uacbd\ud55c\ub2e4.\n3. `widgets_values[0]`\uc5d0 \ud30c\uc77c\uba85\uc744 \uc785\ub825\ud55c\ub2e4 (\uc608: `\"ballet_reference.png\"`).\n4. VNCCS_PoseStudio \ub178\ub4dc(ID 2)\uc758 `pose_image` \uc785\ub825 \uc2ac\ub86f\uc5d0 \ub178\ub4dc 1\uc758 IMAGE \ucd9c\ub825\uc744 \uc5f0\uacb0\ud55c\ub2e4.\n5. \uc6cc\ud06c\ud50c\ub85c\uc6b0\ub97c \uc2e4\ud589\ud558\uba74 3D \ub9c8\ub124\ud0b9\uc774 \ub808\ud37c\ub7f0\uc2a4 \ud3ec\uc988\ub97c \uc790\ub3d9 \uadfc\uc0ac\ud55c\ub2e4.\n\n> **\uc8fc\uc758:** \ub808\ud37c\ub7f0\uc2a4 \uc774\ubbf8\uc9c0\ub97c \uc5f0\uacb0\ud558\uba74 SAM3D \ubaa8\ub378\uc774 \ub2e4\uc6b4\ub85c\ub4dc\ub420 \uc218 \uc788\ub2e4 (\uc218 GB).  \n> \uc218\ub3d9 \ubcf8 \uc870\uc815\ub9cc\uc73c\ub85c\ub3c4 \ucda9\ubd84\ud558\ub2e4\uba74 \ub178\ub4dc 1\uc744 `mode: 4` (\ube44\ud65c\uc131)\ub85c \ub450\uace0 Step 2\uc758 \ubcf8 \uac12\uc744 \uc9c1\uc811 \uc785\ub825\ud558\ub294 \ubc29\uc2dd\uc744 \uad8c\uc7a5\ud55c\ub2e4.\n\n---\n\n## Step 4: SDXL \uce90\ub9ad\ud130 \ud504\ub86c\ud504\ud2b8\n\n### \uae0d\uc815 \ud504\ub86c\ud504\ud2b8 (\ub178\ub4dc ID 6, `widgets_values[0]`)\n\n```\nanime illustration, 1girl, 20s, slender figure, long hair, blue eyes,\nbeautiful face, elegant expression,\nblue dress, flowing blue dress, elegant ballgown, light blue fabric,\nballet pose, one leg raised high, arms spread wide, dynamic pose, full body,\ngraceful, elegant, ballet dancer,\nhigh quality, masterpiece, best quality, highly detailed, 8k,\nsoft lighting, studio background\n```\n\n### \ubd80\uc815 \ud504\ub86c\ud504\ud2b8 (\ub178\ub4dc ID 7, `widgets_values[0]`)\n\n```\nbad anatomy, extra limbs, mutated hands, poorly drawn hands, deformed legs,\nblurry, low quality, ugly, worst quality, text, watermark,\nbad proportions, missing limbs, floating limbs, disconnected limbs,\nextra fingers, fused fingers, too many fingers, long neck\n```\n\n### VNCCS_PoseStudio user_prompt \ud544\ub4dc (\ub178\ub4dc ID 2, JSON \ub0b4\ubd80)\n\n\ub178\ub4dc 2\uc758 `widgets_values[0]` JSON\uc5d0\uc11c `\"user_prompt\"` \ud544\ub4dc\ub97c \ub2e4\uc74c\uc73c\ub85c \uc218\uc815:\n\n```json\n\"user_prompt\": \"anime illustration, 1girl, 20s, blue dress, elegant, ballet pose, full body, high quality\"\n```\n\n---\n\n## Step 5: \uc6cc\ud06c\ud50c\ub85c\uc6b0 \uc124\uc815 \uc870\uc815\n\n### \uc774\ubbf8\uc9c0 \ud06c\uae30 (\ub178\ub4dc ID 10 - EmptyLatentImage)\n\n\ubc1c\ub808 \uc804\uc2e0 \ud3ec\uc988\uc774\ubbc0\ub85c \uc138\ub85c\ud615\uc744 \uad8c\uc7a5:\n\n```json\n\"widgets_values\": [768, 1024, 1]\n```\n\n(\uae30\ubcf8\uac12 1024\u00d71024\uc5d0\uc11c 768\u00d71024\ub85c \ubcc0\uacbd)\n\n### ControlNet \uac15\ub3c4 (\ub178\ub4dc ID 9 - ControlNetApplyAdvanced)\n\n\ubc1c\ub808 \ud3ec\uc988\uc758 \uc815\ud655\ub3c4\uac00 \uc911\uc694\ud558\ubbc0\ub85c \uac15\ub3c4\ub97c \ub192\uc784:\n\n```json\n\"widgets_values\": [0.9, 0.0, 1.0]\n```\n\n| \ud30c\ub77c\ubbf8\ud130 | \uac12 | \uc758\ubbf8 |\n|----------|----|------|\n| strength | 0.9 | \ud3ec\uc988 \ucda9\uc2e4\ub3c4 \ub192\uc74c (\uae30\ubcf8 0.8\uc5d0\uc11c \uc0c1\ud5a5) |\n| start_percent | 0.0 | \ucc98\uc74c\ubd80\ud130 ControlNet \uc801\uc6a9 |\n| end_percent | 1.0 | \ub05d\uae4c\uc9c0 ControlNet \uc801\uc6a9 |\n\n### KSampler \uc124\uc815 (\ub178\ub4dc ID 11)\n\n\uc560\ub2c8\uba54\uc774\uc158 \uce90\ub9ad\ud130 \ud488\uc9c8\uc744 \uc704\ud574 \uc2a4\ud15d \uc218 \uc0c1\ud5a5:\n\n```json\n\"widgets_values\": [42, \"randomize\", 30, 7.5, \"dpmpp_2m\", \"karras\", 1.0]\n```\n\n| \ud30c\ub77c\ubbf8\ud130 | \ubcc0\uacbd\uac12 | \uc774\uc720 |\n|----------|--------|------|\n| steps | 30 (\uae30\ubcf8 25) | \ub514\ud14c\uc77c \ud5a5\uc0c1 |\n| cfg | 7.5 (\uae30\ubcf8 7.0) | \ud504\ub86c\ud504\ud2b8 \ucda9\uc2e4\ub3c4 \uc18c\ud3ed \uc99d\uac00 |\n\n### ControlNet \ubaa8\ub378 (\ub178\ub4dc ID 8)\n\n\ud604\uc7ac \uc124\uc815: `controlnet-openpose-sdxl.safetensors` \u2014 SDXL\uc6a9 OpenPose\uc774\ubbc0\ub85c \uadf8\ub300\ub85c \uc0ac\uc6a9.\n\n---\n\n## Step 6: \ub2e8\uacc4\ubcc4 \uc6cc\ud06c\ud50c\ub85c\uc6b0 \uc2e4\ud589 \uac00\uc774\ub4dc\n\n### \uc804\uccb4 \uc21c\uc11c\n\n```\n1. ComfyUI \uc2e4\ud589\n       \u2193\n2. VNCCS_PoseStudio_Local_SDXL.json \ub85c\ub4dc\n       \u2193\n3. [\ub178\ub4dc 2] VNCCS_PoseStudio\uc5d0\uc11c \ubcf8 \uc870\uc815\n   - Step 2\uc758 bone \uac12\uc744 JSON \uc5d0\ub514\ud130\uc5d0 \uc9c1\uc811 \uc785\ub825\n   - \ub610\ub294 3D \ubdf0\ud3ec\ud2b8\uc5d0\uc11c \ub9c8\uc6b0\uc2a4\ub85c \ub4dc\ub798\uadf8 \uc870\uc791\n       \u2193\n4. [\ub178\ub4dc 6] Positive Prompt \uc218\uc815 (Step 4 \ud504\ub86c\ud504\ud2b8 \ubd99\uc5ec\ub123\uae30)\n       \u2193\n5. [\ub178\ub4dc 7] Negative Prompt \ud655\uc778 (\uae30\ubcf8\uac12 \uc720\uc9c0 \ub610\ub294 Step 4 \uac12 \uc0ac\uc6a9)\n       \u2193\n6. [\ub178\ub4dc 10] \uc774\ubbf8\uc9c0 \ud06c\uae30\ub97c 768\u00d71024\ub85c \ubcc0\uacbd\n       \u2193\n7. [\ub178\ub4dc 9] ControlNet \uac15\ub3c4\ub97c 0.9\ub85c \uc124\uc815\n       \u2193\n8. [\ub178\ub4dc 11] Steps\ub97c 30\uc73c\ub85c \ubcc0\uacbd\n       \u2193\n9. Queue Prompt \uc2e4\ud589\n       \u2193\n10. [\ub178\ub4dc 4] Pose Preview\uc5d0\uc11c OpenPose \uc2a4\ucf08\ub808\ud1a4 \ud655\uc778\n    - \ub2e4\ub9ac\uac00 \ub192\uc774 \ub4e4\ub9b0 \ud615\ud0dc\uac00 \uc2a4\ucf08\ub808\ud1a4\uc5d0 \ubc18\uc601\ub418\uc5c8\ub294\uc9c0 \ud655\uc778\n       \u2193\n11. [\ub178\ub4dc 13] SaveImage\uc5d0\uc11c \ucd5c\uc885 \uacb0\uacfc \ud655\uc778\n```\n\n### ComfyUI\uc5d0\uc11c \ub178\ub4dc 2 bone \uac12 \uc218\uc815 \ubc29\ubc95\n\n1. VNCCS_PoseStudio \ub178\ub4dc(ID 2)\ub97c \ub354\ube14\ud074\ub9ad\ud558\uac70\ub098 \uc6b0\ud074\ub9ad \u2192 \"Edit\"\n2. 3D \ubdf0\ud3ec\ud2b8\uac00 \uc5f4\ub9ac\uba74 \uc6b0\uce21 \ud328\ub110\uc5d0\uc11c \uac01 bone\uc744 \uc120\ud0dd\n3. X/Y/Z \uc2ac\ub77c\uc774\ub354\ub97c Step 2\uc758 \uac12\uc73c\ub85c \uc870\uc815\n4. \ub610\ub294 \ub178\ub4dc\uc758 `widgets_values[0]` JSON \ubb38\uc790\uc5f4\uc744 \uc9c1\uc811 \ud3b8\uc9d1\ud558\uc5ec `\"bones\"` \uac1d\uccb4 \uc548\uc5d0 Step 2\uc758 \uac12\uc744 \uc785\ub825\n\n---\n\n## Step 7: \uacb0\uacfc \ud655\uc778 \ubc0f \ud2b8\ub7ec\ube14\uc288\ud305\n\n### \uc608\uc0c1 \ubb38\uc81c\uc640 \ud574\uacb0\n\n| \uc99d\uc0c1 | \uc6d0\uc778 | \ud574\uacb0 \ubc29\ubc95 |\n|------|------|-----------|\n| \ud3ec\uc988\uac00 \ub808\ud37c\ub7f0\uc2a4\uc640 \ub2e4\ub984 | ControlNet \uac15\ub3c4 \ubd80\uc871 | \ub178\ub4dc 9\uc5d0\uc11c 0.9 \u2192 1.0\uc73c\ub85c \uc0c1\ud5a5 |\n| \ub2e4\ub9ac\uac00 \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc548 \uc62c\ub77c\uac10 | `thigh_r` \uac01\ub3c4 \ubd80\uc871 | Z\ucd95 95 \u2192 100~110\uc73c\ub85c \ub192\uc784 |\n| \ub4dc\ub808\uc2a4\uac00 \ud30c\ub797\uc9c0 \uc54a\uc74c | \ud504\ub86c\ud504\ud2b8 \uac00\uc911\uce58 \ub0ae\uc74c | `(blue dress:1.4)` \ud615\ud0dc\ub85c \uac15\uc870 |\n| \uc560\ub2c8\uba54\uc774\uc158 \uc2a4\ud0c0\uc77c\uc774 \uc57d\ud568 | \ubaa8\ub378 \ud2b9\uc131 | juggernautXL \ub300\uc2e0 AnimeXL \uacc4\uc5f4 \uccb4\ud06c\ud3ec\uc778\ud2b8\ub85c \uad50\uccb4 |\n| \uc190\uc774 \uc774\uc0c1\ud558\uac8c \ud45c\ud604\ub428 | DWPose \uc190 \uc778\uc2dd \ud55c\uacc4 | `hand_l/r` \ubcf8 \uc218\ub3d9 \ubbf8\uc138\uc870\uc815, \ud504\ub86c\ud504\ud2b8\uc5d0 `detailed hands` \ucd94\uac00 |\n| \ubc1c\ub05d(\ud3ec\uc778\ud2b8) \ud45c\ud604 \uc548 \ub428 | DWPose \ubc1c \uc778\uc2dd \ud55c\uacc4 | \ud504\ub86c\ud504\ud2b8\uc5d0 `ballet shoes, pointed toes` \ucd94\uac00 |\n| \uc804\uc2e0\uc774 \uc798\ub9bc | \uce94\ubc84\uc2a4 \ud06c\uae30 \ubd80\uc871 | 768\u00d71024\ub85c \uc124\uc815 \ud655\uc778, \ub610\ub294 VNCCS_PoseStudio\uc758 `cam_zoom`\uc744 1.2\ub85c \uc904\uc784 |\n\n### \ubc18\ubcf5 \uac1c\uc120 \ud750\ub984\n\n```\n\uccab \ubc88\uc9f8 \uacb0\uacfc \ud655\uc778\n    \u2193\n\ud3ec\uc988 \uc815\ud655\ub3c4 \ubb38\uc81c? \u2192 ControlNet \uac15\ub3c4 \uc0c1\ud5a5 (0.9\u21921.0)\n\uce90\ub9ad\ud130 \uc678\ubaa8 \ubb38\uc81c? \u2192 \ud504\ub86c\ud504\ud2b8\uc5d0 \uc678\ubaa8 \ubb18\uc0ac \ucd94\uac00\n\ud488\uc9c8 \ubb38\uc81c? \u2192 Steps \uc99d\uac00 (30\u219235), CFG \uc870\uc815\n    \u2193\nSeed \uace0\uc815 \ud6c4 \ud55c \ubcc0\uc218\uc529 \uc870\uc815\n    \u2193\n\uc6d0\ud558\ub294 \uacb0\uacfc \ub2ec\uc131 \u2192 Seed \uae30\ub85d \ubcf4\uad00\n```\n\n---\n\n## \ube60\ub978 \ucc38\uc870 \uc694\uc57d\n\n| \ud56d\ubaa9 | \uc124\uc815\uac12 |\n|------|--------|\n| \uc6cc\ud06c\ud50c\ub85c\uc6b0 \ud30c\uc77c | `VNCCS_PoseStudio_Local_SDXL.json` |\n| \ubaa8\ub378 | `juggernautXL_juggXIByRundiffusion.safetensors` |\n| ControlNet \ubaa8\ub378 | `controlnet-openpose-sdxl.safetensors` |\n| \uc774\ubbf8\uc9c0 \ud06c\uae30 | 768 \u00d7 1024 |\n| ControlNet \uac15\ub3c4 | 0.9 |\n| Steps | 30 |\n| CFG Scale | 7.5 |\n| Sampler | dpmpp_2m / karras |\n| \ud575\uc2ec bone \uc870\uc815 | `thigh_r Z: 95`, `upperarm_l Z: 80`, `upperarm_r Z: -80` |\n"}], "grading": {"eval_id": 1, "eval_name": "ballet-pose-transfer", "config": "with_skill", "expectations": [{"text": "Bone values in [X,Y,Z] format for thigh and upperarm bones", "passed": true, "evidence": "Full JSON with all 20 bones: thigh_r Z:95, upperarm_l Z:80, upperarm_r Z:-80"}, {"text": "SDXL positive prompt includes blue dress and anime character", "passed": true, "evidence": "Prompt: anime illustration, 1girl, 20s, blue dress, flowing blue dress, elegant ballgown"}, {"text": "ControlNet strength value in 0.7-1.0 range specified", "passed": true, "evidence": "ControlNet strength 0.9 recommended with reasoning for ballet pose fidelity"}, {"text": "Step-by-step workflow execution order provided", "passed": true, "evidence": "11-step execution sequence from ComfyUI startup through bone editing to result check"}, {"text": "Node IDs from actual workflow JSON referenced (ID 6, ID 9, ID 11, etc.)", "passed": true, "evidence": "References node IDs 2, 6, 7, 8, 9, 10, 11, 13 with correct roles"}]}}, {"id": "eval-1-without_skill", "prompt": "A reference image of a ballet dancer lifting one leg high with arms spread wide. I want to apply this pose to a 20s female anime character in a blue dress and generate with SDXL. How do I do this?", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "# \ubc1c\ub808 \ub304\uc11c \ud3ec\uc988\ub97c \uc560\ub2c8\uba54\uc774\uc158 \uce90\ub9ad\ud130\uc5d0 \uc801\uc6a9\ud558\ub294 \ubc29\ubc95\n\n## \uac1c\uc694\n\nComfyUI\uc5d0\uc11c VNCCS_PoseStudio + DWPose + ControlNet OpenPose \uc870\ud569\uc744 \uc0ac\uc6a9\ud558\uc5ec \ubc1c\ub808 \ud3ec\uc988 \ub808\ud37c\ub7f0\uc2a4\ub97c \ud30c\ub780 \ub4dc\ub808\uc2a4\ub97c \uc785\uc740 20\ub300 \uc5ec\uc131 \uc560\ub2c8\uba54\uc774\uc158 \uce90\ub9ad\ud130\uc5d0 \uc801\uc6a9\ud558\ub294 \uacfc\uc815\uc785\ub2c8\ub2e4.\n\n\uc6cc\ud06c\ud50c\ub85c\uc6b0 \ud30c\uc77c: `E:\\AI-work\\pose-studio\\VNCCS_PoseStudio_Local_SDXL.json`\n\n---\n\n## \uc804\uccb4 \ud750\ub984 (\uc6cc\ud06c\ud50c\ub85c\uc6b0 3\ub2e8\uacc4 \uad6c\uc870)\n\n```\n[\u2460 Pose Studio] \u2192 [\u2461 DWPose] \u2192 [\u2462 SDXL + ControlNet]\n  3D \ub9c8\ub124\ud0b9 \ud3b8\uc9d1     OpenPose \ucd94\ucd9c    \uc774\ubbf8\uc9c0 \uc0dd\uc131\n```\n\n---\n\n## \ub2e8\uacc4\ubcc4 \uc0c1\uc138 \uc548\ub0b4\n\n### \ub2e8\uacc4 1: \uc6cc\ud06c\ud50c\ub85c\uc6b0 \uc5f4\uae30\n\n1. ComfyUI\ub97c \uc2e4\ud589\ud569\ub2c8\ub2e4.\n2. `Load` \ubc84\ud2bc \ud074\ub9ad \u2192 `E:\\AI-work\\pose-studio\\VNCCS_PoseStudio_Local_SDXL.json` \ud30c\uc77c\uc744 \ubd88\ub7ec\uc635\ub2c8\ub2e4.\n3. \uc138 \uac1c\uc758 \uadf8\ub8f9(\ud30c\ub780/\ubcf4\ub77c/\ucd08\ub85d \uc601\uc5ed)\uc774 \ubcf4\uc774\uba74 \uc815\uc0c1\uc785\ub2c8\ub2e4.\n\n---\n\n### \ub2e8\uacc4 2: \ud3ec\uc988 \ub808\ud37c\ub7f0\uc2a4 \uc785\ub825 (\ub450 \uac00\uc9c0 \ubc29\ubc95 \uc911 \uc120\ud0dd)\n\n#### \ubc29\ubc95 A: \ub808\ud37c\ub7f0\uc2a4 \uc774\ubbf8\uc9c0\uc5d0\uc11c \ud3ec\uc988 \uc790\ub3d9 \ucd94\ucd9c (\uad8c\uc7a5)\n\n\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uc88c\uce21 \uc0c1\ub2e8\uc5d0 **\"Pose Capture (Reference)\"** \ub77c\ub294 LoadImage \ub178\ub4dc\uac00 \uc788\uc2b5\ub2c8\ub2e4 (Node ID: 1). \uc774 \ub178\ub4dc\ub294 \uae30\ubcf8\uc801\uc73c\ub85c \ube44\ud65c\uc131\ud654(mode: 4) \uc0c1\ud0dc\uc785\ub2c8\ub2e4.\n\n1. **LoadImage \ub178\ub4dc\ub97c \ud65c\uc131\ud654**\ud569\ub2c8\ub2e4: \ub178\ub4dc\ub97c \uc6b0\ud074\ub9ad \u2192 \"Enable\" \uc120\ud0dd\n2. \ubc1c\ub808 \ub304\uc11c \ub808\ud37c\ub7f0\uc2a4 \uc774\ubbf8\uc9c0\ub97c \uc774 \ub178\ub4dc\uc5d0 \ub85c\ub4dc\ud569\ub2c8\ub2e4.\n3. \uc774 \ub178\ub4dc\uc758 \ucd9c\ub825(IMAGE)\uc744 **VNCCS_PoseStudio \ub178\ub4dc\uc758 `pose_image` \uc785\ub825**\uc5d0 \uc5f0\uacb0\ud569\ub2c8\ub2e4.\n   - VNCCS_PoseStudio \ub178\ub4dc\uc758 `pose_image` \uc785\ub825 \uc2ac\ub86f\uc774 \ud604\uc7ac \uc5f0\uacb0\ub418\uc5b4 \uc788\uc9c0 \uc54a\uc73c\ubbc0\ub85c(`link: null`) \ub4dc\ub798\uadf8\ud558\uc5ec \uc5f0\uacb0\ud558\uba74 \ub429\ub2c8\ub2e4.\n4. PoseStudio\uac00 \ub808\ud37c\ub7f0\uc2a4 \uc774\ubbf8\uc9c0\uc758 \ud3ec\uc988\ub97c \uc790\ub3d9\uc73c\ub85c 3D \ub9c8\ub124\ud0b9\uc5d0 \ub9e4\ud551\ud569\ub2c8\ub2e4.\n\n> **\uc8fc\uc758**: \ub178\ub4dc \uc81c\ubaa9\uc5d0 \"disconnect to avoid SAM3D download\"\ub77c\uace0 \uc801\ud600 \uc788\uc2b5\ub2c8\ub2e4. SAM3D \ubaa8\ub378\uc774 \uc5c6\ub2e4\uba74 \uc5f0\uacb0 \uc804\uc5d0 \ud574\ub2f9 \ubaa8\ub378\uc744 \uba3c\uc800 \ub2e4\uc6b4\ub85c\ub4dc\ud558\uac70\ub098, \ubc29\ubc95 B\ub97c \uc0ac\uc6a9\ud558\uc138\uc694.\n\n#### \ubc29\ubc95 B: VNCCS_PoseStudio\uc5d0\uc11c \uc9c1\uc811 \ud3ec\uc988 \uc218\ub3d9 \ud3b8\uc9d1\n\n1. **VNCCS_PoseStudio \ub178\ub4dc** (Node ID: 2)\ub97c \ub354\ube14\ud074\ub9ad\ud558\uac70\ub098 \"Open in Editor\" \ubc84\ud2bc\uc744 \ud074\ub9ad\ud569\ub2c8\ub2e4.\n2. 3D \ub9c8\ub124\ud0b9 \ud3b8\uc9d1 UI\uac00 \uc5f4\ub9bd\ub2c8\ub2e4.\n3. \ubc1c\ub808 \ub304\uc11c \ud3ec\uc988(\ud55c\ucabd \ub2e4\ub9ac\ub97c \ub192\uc774 \ub4e4\uc5b4\uc62c\ub9ac\uace0 \ud314\uc744 \ubc8c\ub9b0 \ud3ec\uc988)\uc5d0 \ub9de\uac8c bone\uc744 \uc870\uc815\ud569\ub2c8\ub2e4:\n   - **\ub2e4\ub9ac \uc62c\ub9ac\uae30**: `thigh_l` \ub610\ub294 `thigh_r` \u2192 \uc804\ubc29/\uce21\ubc29\uc73c\ub85c \ud06c\uac8c \ud68c\uc804 (X\ucd95 -90\ub3c4 \uc774\uc0c1)\n   - **\ubb34\ub98e \ud3b4\uae30**: `calf_l` \ub610\ub294 `calf_r` \u2192 0\ub3c4 \uc720\uc9c0 (\ubc1c\ub808\ub294 \ub2e4\ub9ac\ub97c \uace7\uac8c \ud3c4)\n   - **\ud314 \ubc8c\ub9ac\uae30**: `upperarm_l`, `upperarm_r` \u2192 \uc591\ucabd\uc73c\ub85c \uc218\ud3c9 \ubc29\ud5a5 (Z\ucd95 \u00b190\ub3c4)\n   - **\ud314\uafc8\uce58**: `lowerarm_l`, `lowerarm_r` \u2192 \uc57d\uac04 \uad7d\ud788\uac70\ub098 \ud3b4\uae30\n   - **\ucc99\ucd94**: `spine_01`, `spine_02`, `spine_03` \u2192 \ubc1c\ub808 \ud2b9\uc720\uc758 \uc9c1\ub9bd \uc790\uc138 \uc720\uc9c0\n4. \uc870\uc815 \uc644\ub8cc \ud6c4 \uc800\uc7a5\ud569\ub2c8\ub2e4.\n\n---\n\n### \ub2e8\uacc4 3: DWPose\ub85c OpenPose \uc2a4\ucf08\ub808\ud1a4 \ucd94\ucd9c \ud655\uc778\n\n- **DWPreprocessor \ub178\ub4dc** (Node ID: 3)\uac00 PoseStudio \ucd9c\ub825\uc744 \ubc1b\uc544 OpenPose \uc2a4\ucf08\ub808\ud1a4\uc73c\ub85c \ubcc0\ud658\ud569\ub2c8\ub2e4.\n- **PreviewImage \ub178\ub4dc** (Node ID: 4, \"Pose Preview\")\uc5d0\uc11c \ucd94\ucd9c\ub41c \uc2a4\ucf08\ub808\ud1a4 \uc774\ubbf8\uc9c0\ub97c \ud655\uc778\ud569\ub2c8\ub2e4.\n- \ubc1c\ub808 \ud3ec\uc988\uac00 \uc62c\ubc14\ub974\uac8c \uc778\uc2dd\ub418\uc5c8\ub294\uc9c0 \ud655\uc778\ud558\uc138\uc694 (\ud55c\ucabd \ub2e4\ub9ac \ub192\uc774 \ub4e4\uc5b4\uc62c\ub9bc, \uc591\ud314 \ubc8c\ub9bc).\n\n---\n\n### \ub2e8\uacc4 4: SDXL \uc0dd\uc131 \uc124\uc815\n\n#### 4-1. \uccb4\ud06c\ud3ec\uc778\ud2b8 \ud655\uc778\n\n**CheckpointLoaderSimple \ub178\ub4dc** (Node ID: 5)\uc5d0 \ud604\uc7ac `juggernautXL_juggXIByRundiffusion.safetensors`\uac00 \uc124\uc815\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4. \uc560\ub2c8\uba54\uc774\uc158 \uc2a4\ud0c0\uc77c\uc744 \uc6d0\ud55c\ub2e4\uba74 \uc560\ub2c8\uba54\uc774\uc158 \ud2b9\ud654 SDXL \ubaa8\ub378\ub85c \ubcc0\uacbd\uc744 \uad8c\uc7a5\ud569\ub2c8\ub2e4:\n- \uc608: `animagineXL`, `bluePencilXL`, `kohakuXLbeta` \ub4f1\n\n#### 4-2. \ud3ec\uc9c0\ud2f0\ube0c \ud504\ub86c\ud504\ud2b8 \uc218\uc815\n\n**Positive Prompt \ub178\ub4dc** (Node ID: 6)\ub97c \ub2e4\uc74c\uacfc \uac19\uc774 \uc218\uc815\ud569\ub2c8\ub2e4:\n\n```\nanime illustration, 1girl, 20s, full body, blue dress, ballet pose, one leg raised high, arms spread wide, elegant dancer, detailed character design, high quality, masterpiece, best quality\n```\n\n\uc8fc\uc694 \ucd94\uac00 \ud0a4\uc6cc\ub4dc:\n- `1girl, 20s` \u2014 20\ub300 \uc5ec\uc131\n- `blue dress` \u2014 \ud30c\ub780 \ub4dc\ub808\uc2a4\n- `ballet pose, one leg raised high, arms spread wide` \u2014 \ud3ec\uc988 \ubb18\uc0ac\n- `elegant dancer` \u2014 \ubc1c\ub808 \ubd84\uc704\uae30 \uac15\ud654\n- `anime illustration` \u2014 \uc560\ub2c8\uba54\uc774\uc158 \uc2a4\ud0c0\uc77c\n\n#### 4-3. \ub124\uac70\ud2f0\ube0c \ud504\ub86c\ud504\ud2b8 \ud655\uc778\n\n**Negative Prompt \ub178\ub4dc** (Node ID: 7) \ud604\uc7ac \uc124\uc815:\n```\nbad anatomy, extra limbs, mutated hands, poorly drawn, blurry, low quality, ugly, worst quality, text, watermark\n```\n\uc774 \uadf8\ub300\ub85c \uc720\uc9c0\ud558\uac70\ub098 `deformed legs, wrong pose` \ub4f1\uc744 \ucd94\uac00\ud574\ub3c4 \uc88b\uc2b5\ub2c8\ub2e4.\n\n#### 4-4. ControlNet \uac15\ub3c4 \uc124\uc815\n\n**ControlNetApplyAdvanced \ub178\ub4dc** (Node ID: 9) \ud604\uc7ac \uc124\uc815:\n- strength: `0.8` \u2014 \ud3ec\uc988 \uc900\uc218 \uac15\ub3c4 (0.7~0.9 \uad8c\uc7a5)\n- start: `0.0`, end: `1.0`\n\n\ubc1c\ub808 \ud3ec\uc988\ucc98\ub7fc \ubcf5\uc7a1\ud55c \ud3ec\uc988\ub294 `0.8~0.85`\ub85c \uc720\uc9c0\ud558\ub294 \uac83\uc774 \uc88b\uc2b5\ub2c8\ub2e4. \ub108\ubb34 \ub192\uc73c\uba74(1.0) \uc774\ubbf8\uc9c0 \ud488\uc9c8\uc774 \uc800\ud558\ub420 \uc218 \uc788\uc2b5\ub2c8\ub2e4.\n\n#### 4-5. \uc774\ubbf8\uc9c0 \ud06c\uae30\n\n**EmptyLatentImage \ub178\ub4dc** (Node ID: 10): \ud604\uc7ac `1024x1024`\n- \uc804\uc2e0 \ud3ec\uc988\uc774\ubbc0\ub85c \uc138\ub85c \ube44\uc728\uc744 \uad8c\uc7a5: `768x1216` \ub610\ub294 `832x1216`\uc73c\ub85c \ubcc0\uacbd\n\n#### 4-6. KSampler \uc124\uc815\n\n**KSampler \ub178\ub4dc** (Node ID: 11) \ud604\uc7ac \uc124\uc815:\n- steps: `25`, cfg: `7.0`, sampler: `dpmpp_2m`, scheduler: `karras`\n- \uc774 \uc124\uc815\uc740 \uc801\uc808\ud569\ub2c8\ub2e4. \ud544\uc694\uc2dc cfg\ub97c `6.5~7.5` \ubc94\uc704\uc5d0\uc11c \uc870\uc815.\n\n---\n\n### \ub2e8\uacc4 5: \uc0dd\uc131 \uc2e4\ud589\n\n1. \ubaa8\ub4e0 \uc124\uc815 \uc644\ub8cc \ud6c4 **Queue Prompt** \ubc84\ud2bc\uc744 \ud074\ub9ad\ud569\ub2c8\ub2e4.\n2. \uc0dd\uc131\ub41c \uc774\ubbf8\uc9c0\ub294 **SaveImage \ub178\ub4dc** (Node ID: 13)\ub97c \ud1b5\ud574 `PoseStudio_SDXL_XXXXXX.png` \ud30c\uc77c\uba85\uc73c\ub85c \uc800\uc7a5\ub429\ub2c8\ub2e4.\n3. **Lighting Prompt \ub178\ub4dc** (Node ID: 14)\uc5d0\uc11c PoseStudio\uac00 \uc790\ub3d9 \uc0dd\uc131\ud55c \uc870\uba85 \ud504\ub86c\ud504\ud2b8\ub3c4 \ucc38\uace0\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.\n\n---\n\n## \uc694\uc57d \uccb4\ud06c\ub9ac\uc2a4\ud2b8\n\n- [ ] LoadImage \ub178\ub4dc\uc5d0 \ubc1c\ub808 \ub304\uc11c \ub808\ud37c\ub7f0\uc2a4 \uc774\ubbf8\uc9c0 \ub85c\ub4dc \ud6c4 PoseStudio\uc5d0 \uc5f0\uacb0 (\ubc29\ubc95 A), \ub610\ub294 PoseStudio\uc5d0\uc11c \uc9c1\uc811 \ud3ec\uc988 \ud3b8\uc9d1 (\ubc29\ubc95 B)\n- [ ] Pose Preview \ub178\ub4dc\uc5d0\uc11c \uc2a4\ucf08\ub808\ud1a4 \ud655\uc778\n- [ ] Positive Prompt\uc5d0 `1girl, 20s, blue dress, ballet pose, one leg raised high, arms spread wide, anime illustration` \ucd94\uac00\n- [ ] \uc560\ub2c8\uba54\uc774\uc158 \ud2b9\ud654 SDXL \ubaa8\ub378\ub85c \uccb4\ud06c\ud3ec\uc778\ud2b8 \ubcc0\uacbd (\uc120\ud0dd)\n- [ ] \uc774\ubbf8\uc9c0 \ud06c\uae30\ub97c \uc138\ub85c \ube44\uc728\ub85c \ubcc0\uacbd (768x1216 \uad8c\uc7a5)\n- [ ] ControlNet strength 0.8 \uc720\uc9c0\n- [ ] Queue Prompt \uc2e4\ud589\n\n---\n\n## \ud301\n\n- \ud3ec\uc988\uac00 \uc815\ud655\ud788 \uc548 \ub098\uc628\ub2e4\uba74 DWPose Preview\ub97c \ud655\uc778\ud558\uace0 PoseStudio\uc5d0\uc11c bone\uc744 \ub2e4\uc2dc \uc870\uc815\ud558\uc138\uc694.\n- \uc560\ub2c8\uba54\uc774\uc158 \uc2a4\ud0c0\uc77c\uc774 \uc57d\ud558\ub2e4\uba74 \ubaa8\ub378\uc744 \uc560\ub2c8\uba54\uc774\uc158 \ud2b9\ud654 SDXL\ub85c \uad50\uccb4\ud558\uac70\ub098 `LoRA`\ub97c \ucd94\uac00\ud558\uc138\uc694.\n- \ud30c\ub780 \ub4dc\ub808\uc2a4 \uc0c9\uc0c1\uc774 \uc798 \ud45c\ud604\ub418\uc9c0 \uc54a\uc73c\uba74 `royal blue dress`, `sapphire blue dress` \ub4f1 \ub354 \uad6c\uccb4\uc801\uc778 \uc0c9\uc0c1 \ud45c\ud604\uc744 \uc0ac\uc6a9\ud558\uc138\uc694.\n"}], "grading": {"eval_id": 1, "eval_name": "ballet-pose-transfer", "config": "without_skill", "expectations": [{"text": "Bone values in [X,Y,Z] format for thigh and upperarm bones", "passed": false, "evidence": "Mentions bones but gives only rough descriptions, no concrete JSON values"}, {"text": "SDXL positive prompt includes blue dress and anime character", "passed": true, "evidence": "Prompt: anime illustration, 1girl, 20s, full body, blue dress, ballet pose"}, {"text": "ControlNet strength value in 0.7-1.0 range specified", "passed": true, "evidence": "States ControlNet strength 0.8 is appropriate"}, {"text": "Step-by-step workflow execution order provided", "passed": true, "evidence": "5-step guide covering reference input, DWPose, prompt, settings, execution"}, {"text": "Node IDs from actual workflow JSON referenced (ID 6, ID 9, ID 11, etc.)", "passed": false, "evidence": "Does not reference specific node IDs; refers to nodes by descriptive names only"}]}}, {"id": "eval-2-with_skill", "prompt": "I want to create a pose in VNCCS_PoseStudio where the character is sitting on a chair resting their chin on their hand. Which bones do I adjust and how? Also what ControlNet strength should I use?", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "# VNCCS_PoseStudio: \uc758\uc790\uc5d0 \uc549\uc544 \ud131 \uad34\ub294 \ud3ec\uc988 \uac00\uc774\ub4dc\n\n## \ud3ec\uc988 \uc124\uba85\n\n\uc758\uc790\uc5d0 \uc549\uc544 \ud55c \uc190\uc73c\ub85c \ud131\uc744 \uad34\ub294 \uc790\uc138 (\uc0dd\uac01\uc5d0 \uc7a0\uae34/\uc0ac\uc0c9\ud558\ub294 \ud3ec\uc988).\n\uc0c1\uccb4\ub294 \uc57d\uac04 \uc55e\uc73c\ub85c \uae30\uc6b8\uace0, \ud314\uafc8\uce58\ub294 \ubb34\ub98e \ub610\ub294 \uc758\uc790 \ud314\uac78\uc774\uc5d0 \uc62c\ub824\uc9c4 \ud615\ud0dc.\n\n---\n\n## Step 1: \ubcf8(Bone) \uc870\uc815 \uac12\n\n### \uae30\ubcf8 \uc549\uae30 \uc790\uc138 (\ud558\uccb4)\n\n```json\n\"pelvis\":    [15, 0, 0],\n\"thigh_l\":   [85, 5, 0],\n\"thigh_r\":   [85, -5, 0],\n\"calf_l\":    [-85, 0, 0],\n\"calf_r\":    [-85, 0, 0],\n\"foot_l\":    [20, 0, 0],\n\"foot_r\":    [20, 0, 0]\n```\n\n- **pelvis**: X+15 \u2192 \uc549\uc744 \ub54c \uace8\ubc18\uc774 \uc57d\uac04 \uc55e\uc73c\ub85c \uae30\uc6b8\uc5b4\uc9c0\ub294 \ud6a8\uacfc\n- **thigh_l/r**: X+85 \u2192 \ud5c8\ubc85\uc9c0\ub97c \uc218\ud3c9(90\ub3c4)\uc5d0 \uac00\uae5d\uac8c \uc811\uc5b4 \uc549\uc740 \uc790\uc138 \uad6c\ud604\n- **calf_l/r**: X-85 \u2192 \uc885\uc544\ub9ac\ub97c \uc544\ub798\ub85c \ub0b4\ub824 \ubc1c\uc774 \ubc14\ub2e5\uc5d0 \ub2ff\ub294 \uc790\uc138\n- **foot_l/r**: X+20 \u2192 \ubc1c\ubc14\ub2e5\uc774 \uc790\uc5f0\uc2a4\ub7fd\uac8c \ubc14\ub2e5\uc744 \ud5a5\ud558\ub3c4\ub85d\n\n### \ucc99\ucd94 / \uc0c1\uccb4 \uae30\uc6b8\uae30\n\n```json\n\"spine_01\":  [15, 0, 0],\n\"spine_02\":  [10, 0, 0],\n\"spine_03\":  [5, 0, 0]\n```\n\n- \ucc99\ucd94\ub97c \ub2e8\uacc4\uc801\uc73c\ub85c \uc55e\uc73c\ub85c \uae30\uc6b8\uc5ec \uc0c1\uccb4\uac00 \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc219\uc5ec\uc9c0\ub294 \uc790\uc138 \uad6c\ud604\n- \ucd1d \uc57d 30\ub3c4 \uc804\ubc29 \uae30\uc6b8\uae30\n\n### \ud131\uc744 \uad34\ub294 \ud314 (\uc624\ub978\uc190 \uae30\uc900)\n\n```json\n\"clavicle_r\":  [0, 0, -10],\n\"upperarm_r\":  [-20, 0, -30],\n\"lowerarm_r\":  [80, 0, 0],\n\"hand_r\":      [-20, 0, 0]\n```\n\n- **clavicle_r**: \uc1c4\uace8\uc744 \uc57d\uac04 \ub0b4\ub824 \ud314\uafc8\uce58\uac00 \uc9c0\uc9c0\uba74\uc5d0 \ub2ff\ub294 \uc790\uc138 \uc900\ube44\n- **upperarm_r**: X-20, Z-30 \u2192 \uc704\ud314\uc744 \uc55e\uc73c\ub85c \ub0b4\ub9ac\uace0 \ubab8 \ucabd\uc73c\ub85c \ubaa8\uc74c\n- **lowerarm_r**: X+80 \u2192 \ud314\uafc8\uce58\ub97c \uac70\uc758 \uc9c1\uac01\uc73c\ub85c \uad7d\ud600 \uc804\uc644\uc774 \uc704\ub97c \ud5a5\ud568\n- **hand_r**: X-20 \u2192 \uc190\uc774 \uc544\ub798\ub85c \uc57d\uac04 \uaebe\uc5ec \ud131\uc5d0 \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc811\ucd09\n\n### \ubc18\ub300\ucabd \ud314 (\uc67c\ud314 \u2014 \uc790\uc5f0\uc2a4\ub7fd\uac8c \ub0b4\ub9b0 \uc0c1\ud0dc)\n\n```json\n\"clavicle_l\":  [0, 0, 5],\n\"upperarm_l\":  [0, 0, 15],\n\"lowerarm_l\":  [10, 0, 0],\n\"hand_l\":      [0, 0, 0]\n```\n\n- \uc67c\ud314\uc740 \ubb34\ub98e \uc704\ub098 \uc606\uc5d0 \uc790\uc5f0\uc2a4\ub7fd\uac8c \ub193\uc778 \uc0c1\ud0dc\n\n### \ubaa9 / \uba38\ub9ac\n\n```json\n\"neck_01\":  [-5, 0, 0],\n\"head\":     [-10, 5, 0]\n```\n\n- **neck_01**: X-5 \u2192 \ubaa9\uc744 \uc57d\uac04 \uc55e\uc73c\ub85c \uae30\uc6b8\uc784\n- **head**: X-10, Y+5 \u2192 \uba38\ub9ac\uac00 \uc0b4\uc9dd \uc55e\uc73c\ub85c \uc219\uc5ec\uc9c0\uba70 \uc57d\uac04 \uce21\uba74\uc744 \ubc14\ub77c\ubcf4\ub294 \uc790\uc138 (\uc0dd\uac01\ud558\ub294 \ud45c\uc815\uacfc \uc5b4\uc6b8\ub9bc)\n\n---\n\n## \uc804\uccb4 \ubcf8 \uc870\uc815 \uc694\uc57d\ud45c\n\n| \ubcf8 \uc774\ub984 | X (\uc804\ud6c4) | Y (\uc88c\uc6b0 \ud2c0\uae30) | Z (\ub4e4\uc5b4\uc62c\ub9ac\uae30) | \uc124\uba85 |\n|---------|----------|---------------|----------------|------|\n| pelvis | +15 | 0 | 0 | \uace8\ubc18 \uc55e \uae30\uc6b8\uae30 |\n| spine_01 | +15 | 0 | 0 | \ud5c8\ub9ac \uc55e \uad7d\ud798 |\n| spine_02 | +10 | 0 | 0 | \uc911\uac04 \ucc99\ucd94 \uc55e \uad7d\ud798 |\n| spine_03 | +5 | 0 | 0 | \uc0c1\ubd80 \ucc99\ucd94 \uc55e \uad7d\ud798 |\n| neck_01 | -5 | 0 | 0 | \ubaa9 \uc55e \uae30\uc6b8\uae30 |\n| head | -10 | +5 | 0 | \uba38\ub9ac \uc55e \uc219\uc784 + \uc57d\uac04 \uce21\uba74 |\n| clavicle_r | 0 | 0 | -10 | \uc624\ub978 \uc1c4\uace8 \ub0b4\ub9bc |\n| upperarm_r | -20 | 0 | -30 | \uc624\ub978 \uc704\ud314: \uc55e\uc73c\ub85c + \uc548\uc73c\ub85c |\n| lowerarm_r | +80 | 0 | 0 | \uc624\ub978 \uc544\ub798\ud314: \uc9c1\uac01 \uad7d\ud798 |\n| hand_r | -20 | 0 | 0 | \uc624\ub978 \uc190 \uc544\ub798\ub85c \uaebe\uae30 |\n| clavicle_l | 0 | 0 | +5 | \uc67c \uc1c4\uace8 \uc790\uc5f0\uc2a4\ub7fd\uac8c |\n| upperarm_l | 0 | 0 | +15 | \uc67c \uc704\ud314 \uc790\uc5f0\uc2a4\ub7fd\uac8c \ub0b4\ub9bc |\n| lowerarm_l | +10 | 0 | 0 | \uc67c \uc544\ub798\ud314 \uc57d\uac04 \uad7d\ud798 |\n| thigh_l | +85 | +5 | 0 | \uc67c \ud5c8\ubc85\uc9c0 \uc811\uae30 |\n| thigh_r | +85 | -5 | 0 | \uc624\ub978 \ud5c8\ubc85\uc9c0 \uc811\uae30 |\n| calf_l | -85 | 0 | 0 | \uc67c \uc885\uc544\ub9ac \ub0b4\ub9ac\uae30 |\n| calf_r | -85 | 0 | 0 | \uc624\ub978 \uc885\uc544\ub9ac \ub0b4\ub9ac\uae30 |\n| foot_l | +20 | 0 | 0 | \uc67c \ubc1c \ubc14\ub2e5 \ud5a5\ud558\uae30 |\n| foot_r | +20 | 0 | 0 | \uc624\ub978 \ubc1c \ubc14\ub2e5 \ud5a5\ud558\uae30 |\n\n---\n\n## Step 2: ControlNet \uac15\ub3c4 \ucd94\ucc9c\n\n### \uad8c\uc7a5\uac12: **0.75 ~ 0.85**\n\n**\uc774\uc720:**\n\n\uc549\uc544\uc11c \ud131\uc744 \uad34\ub294 \ud3ec\uc988\ub294 \ub2e4\uc74c \ud2b9\uc131\uc744 \uac00\uc9c4\ub2e4:\n\n1. **\ubcf5\uc7a1\ud55c \ud314 \uad7d\ud798 \uac01\ub3c4**: \uc804\uc644\uc774 \uc9c1\uac01\uc73c\ub85c \uc62c\ub77c\uc624\uace0 \uc190\uc774 \uc5bc\uad74\uc5d0 \ub2ff\ub294 \uad6c\uc870\ub294 ControlNet\uc774 \uc815\ud655\ud788 \ubc18\uc601\ud574\uc57c \ud568 \u2192 \ub108\ubb34 \ub0ae\uc73c\uba74 \ud3ec\uc988\uac00 \ud480\ub824\ubc84\ub9bc\n2. **\uc549\uae30 \uc790\uc138\uc758 \ud558\uccb4 \uad6c\uc870**: \ud5c8\ubc85\uc9c0-\uc885\uc544\ub9ac \uc811\ud798 \uac01\ub3c4\uac00 \uc911\uc694\ud558\ubbc0\ub85c \uc5b4\ub290 \uc815\ub3c4 \uac15\ud55c \uac15\ub3c4 \ud544\uc694\n3. **\uc790\uc5f0\uc2a4\ub7ec\uc6b4 \ud45c\uc815/\uc5bc\uad74 \uc601\uc5ed**: \uac15\ub3c4\uac00 \ub108\ubb34 \ub192\uc73c\uba74(0.9+) \uc5bc\uad74 \ub514\ud14c\uc77c\uc774 \ubb49\uac1c\uc9c0\uac70\ub098 \uc190-\ud131 \uc811\ucd09 \ubd80\uc704\uac00 \ubd80\uc790\uc5f0\uc2a4\ub7fd\uac8c \ud45c\ud604\ub420 \uc218 \uc788\uc74c\n\n| ControlNet \uac15\ub3c4 | \ud6a8\uacfc |\n|-----------------|------|\n| 0.60 ~ 0.70 | \ud3ec\uc988\uac00 \ub290\uc2a8\ud558\uac8c \ubc18\uc601\ub428. \uc549\uae30 \uc790\uc138\uac00 \uc11c\uc788\ub294 \uc790\uc138\ub85c \ubb34\ub108\uc9c8 \uc704\ud5d8 |\n| **0.75 ~ 0.85** | **\uad8c\uc7a5**: \ud3ec\uc988 \ucda9\uc2e4\ub3c4\uc640 \uce90\ub9ad\ud130 \uc790\uc5f0\uc2a4\ub7ec\uc6c0\uc758 \uade0\ud615 \ucd5c\uc801 |\n| 0.90 ~ 1.00 | \ud3ec\uc988\ub294 \uc815\ud655\ud558\ub098 \uc5bc\uad74/\uc190 \ub514\ud14c\uc77c\uc774 \ub531\ub531\ud574 \ubcf4\uc77c \uc218 \uc788\uc74c |\n\n### \uc2dc\uc791 \uad8c\uc7a5 \uc124\uc815\n\n```\nControlNet \uac15\ub3c4: 0.80\nKSampler \uc2a4\ud15d: 28\nCFG Scale: 7.0\n\uc774\ubbf8\uc9c0 \ud06c\uae30: 768\u00d71024 (\uc138\ub85c\ud615 \u2014 \uc549\uc740 \uc804\uc2e0\uc0f7\uc5d0 \uc801\ud569)\n```\n\n---\n\n## \ucd94\uac00 \ud301\n\n- **\uc758\uc790 \ud45c\ud604**: \uc758\uc790 \uc790\uccb4\ub294 ControlNet \uc2a4\ucf08\ub808\ud1a4\uc5d0 \ud3ec\ud568\ub418\uc9c0 \uc54a\uc73c\ubbc0\ub85c \ud504\ub86c\ud504\ud2b8\uc5d0 `sitting on chair, chair visible` \ub4f1\uc744 \uba85\uc2dc\ud574\uc57c \ud568\n- **\uc190 \ud45c\ud604 \uc8fc\uc758**: \ud131\uc744 \uad34\ub294 \uc190 \ubd80\ubd84\uc740 DWPose\uac00 \uc815\ud655\ud788 \uc7a1\uae30 \uc5b4\ub824\uc6b8 \uc218 \uc788\uc74c. \uacb0\uacfc\ubb3c\uc5d0\uc11c \uc190\uc774 \uc5b4\uc0c9\ud558\uba74 `hand_r` \ubcf8\uc744 \u00b15~10\ub3c4 \uc870\uc815\ud558\uba70 \ubc18\ubcf5 \ud14c\uc2a4\ud2b8 \uad8c\uc7a5\n- **\ud504\ub86c\ud504\ud2b8 \ubcf4\uc870**: `sitting, chin resting on hand, elbow on knee, thoughtful pose` \ub4f1\uc758 \ud3ec\uc988 \uc124\uba85 \ud0dc\uadf8\ub97c \uae0d\uc815 \ud504\ub86c\ud504\ud2b8\uc5d0 \ucd94\uac00\ud558\uba74 ControlNet\uacfc \uc2dc\ub108\uc9c0 \ud6a8\uacfc\n- **3/4 \ubdf0 \uad8c\uc7a5**: \uc815\uba74\ubcf4\ub2e4 \uc57d\uac04 \ud2c0\uc5b4\uc9c4 \uac01\ub3c4(head Y+5~10)\uac00 \ud131 \uad34\uae30 \ud3ec\uc988\ub97c \ub354 \uc790\uc5f0\uc2a4\ub7fd\uac8c \ud45c\ud604\ud568\n"}], "grading": {"eval_id": 2, "eval_name": "sitting-chin-rest-pose", "config": "with_skill", "expectations": [{"text": "pelvis, thigh, calf bone values specified for sitting pose", "passed": true, "evidence": "pelvis [15,0,0], thigh_l/r [85,+-5,0], calf_l/r [-85,0,0], foot_l/r [20,0,0]"}, {"text": "upperarm, lowerarm, hand values for chin-resting arm specified", "passed": true, "evidence": "upperarm_r [-20,0,-30], lowerarm_r [80,0,0], hand_r [-20,0,0] with explanations"}, {"text": "ControlNet strength recommendation with specific value and reasoning", "passed": true, "evidence": "0.75-0.85 recommended, detailed table with effects at each range, starts at 0.80"}, {"text": "Additional tips specific to sitting pose (chair prompt, hand warnings)", "passed": true, "evidence": "Mentions chair prompt tag, hand_r adjustment warning, 3/4 view recommendation"}]}}, {"id": "eval-2-without_skill", "prompt": "I want to create a pose in VNCCS_PoseStudio where the character is sitting on a chair resting their chin on their hand. Which bones do I adjust and how? Also what ControlNet strength should I use?", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "# VNCCS_PoseStudio: \uc758\uc790\uc5d0 \uc549\uc544 \ud131\uc744 \uad34\ub294 \ud3ec\uc988 \uc124\uc815 \uac00\uc774\ub4dc\n\n## \ud3ec\uc988 \uac1c\uc694\n\n\uc758\uc790\uc5d0 \uc549\uc544 \ud131\uc744 \uad34\ub294 \ud3ec\uc988\ub294 \ub2e4\uc74c \uc694\uc18c\ub4e4\ub85c \uad6c\uc131\ub429\ub2c8\ub2e4:\n- \uc0c1\uccb4\uac00 \uc57d\uac04 \uc55e\uc73c\ub85c \uae30\uc6b8\uc5b4\uc9c4 \ucc29\uc11d \uc790\uc138\n- \ud55c\ucabd \ud314\uafc8\uce58\ub97c \ud14c\uc774\ube14/\ubb34\ub98e\uc5d0 \uc62c\ub9ac\uace0 \uc190\uc73c\ub85c \ud131\uc744 \ubc1b\uce68\n- \ubc18\ub300\ucabd \ud314\uc740 \uc790\uc5f0\uc2a4\ub7fd\uac8c \ub0b4\ub9ac\uac70\ub098 \ub2e4\ub9ac \uc704\uc5d0 \ub193\uc74c\n- \uba38\ub9ac\uac00 \uc57d\uac04 \uc55e\uc73c\ub85c \uc219\uc5ec\uc9c0\uba70 \ud55c\ucabd\uc73c\ub85c \uae30\uc6b8\uc5b4\uc9d0\n\n---\n\n## Bone\ubcc4 \uc870\uc815\uac12 (\uc624\ub978\uc190\uc73c\ub85c \ud131\uc744 \uad34\ub294 \uacbd\uc6b0)\n\n### \ud558\uccb4 (\ucc29\uc11d \uc790\uc138)\n\n| Bone | X | Y | Z | \uc124\uba85 |\n|------|---|---|---|------|\n| pelvis | 0 | 0 | 0 | \uae30\uc900\uc810, \ubcc0\uacbd \uc5c6\uc74c |\n| thigh_l | 80 | 0 | -5 | \uc67c\ucabd \ud5c8\ubc85\uc9c0 \uc218\ud3c9 (\uc549\uc740 \uc790\uc138) |\n| thigh_r | 80 | 0 | 5 | \uc624\ub978\ucabd \ud5c8\ubc85\uc9c0 \uc218\ud3c9 |\n| calf_l | -90 | 0 | 0 | \uc67c\ucabd \ubb34\ub98e 90\ub3c4 \uad7d\ud798 |\n| calf_r | -90 | 0 | 0 | \uc624\ub978\ucabd \ubb34\ub98e 90\ub3c4 \uad7d\ud798 |\n| foot_l | 10 | 0 | 0 | \ubc1c\ubaa9 \uc790\uc5f0\uc2a4\ub7fd\uac8c |\n| foot_r | 10 | 0 | 0 | \ubc1c\ubaa9 \uc790\uc5f0\uc2a4\ub7fd\uac8c |\n\n### \ucc99\ucd94 \ubc0f \ubaa9 (\uc55e\uc73c\ub85c \uc57d\uac04 \uae30\uc6b8\uc5b4\uc9c4 \uc790\uc138)\n\n| Bone | X | Y | Z | \uc124\uba85 |\n|------|---|---|---|------|\n| spine_01 | 10 | 0 | 0 | \ud5c8\ub9ac \uc57d\uac04 \uc55e\uc73c\ub85c |\n| spine_02 | 10 | 0 | 0 | \uc911\uac04 \ub4f1 \uc57d\uac04 \uc55e\uc73c\ub85c |\n| spine_03 | 5 | 0 | -3 | \uc0c1\uccb4 \uc55e\uc73c\ub85c, \uc57d\uac04 \uc624\ub978\ucabd \uae30\uc6b8\uae30 |\n| neck_01 | 15 | 0 | 5 | \ubaa9 \uc55e\uc73c\ub85c \uc219\uc784, \uc57d\uac04 \uae30\uc6b8\uae30 |\n| head | 10 | 0 | 8 | \uba38\ub9ac \uc55e\uc73c\ub85c \uc219\uc774\uace0 \uc624\ub978\ucabd\uc73c\ub85c \uae30\uc6b8\uae30 |\n\n### \uc624\ub978\ud314 (\ud131\uc744 \uad34\ub294 \ud314)\n\n| Bone | X | Y | Z | \uc124\uba85 |\n|------|---|---|---|------|\n| clavicle_r | 5 | 0 | 15 | \uc624\ub978\ucabd \uc5b4\uae68 \uc57d\uac04 \ub4e4\uc5b4\uc62c\ub9bc |\n| upperarm_r | 45 | -20 | 30 | \ud314\uafc8\uce58\ub97c \ud14c\uc774\ube14/\ubb34\ub98e \ucabd\uc73c\ub85c |\n| lowerarm_r | 80 | 0 | -10 | \ud314\uafc8\uce58 \uad7d\ud600\uc11c \uc190\uc774 \uc5bc\uad74 \ucabd\uc73c\ub85c |\n| hand_r | -10 | 0 | 20 | \uc190\uc774 \ud131\uc744 \ubc1b\uce58\ub294 \ud615\ud0dc |\n\n### \uc67c\ud314 (\uc790\uc5f0\uc2a4\ub7fd\uac8c \ub0b4\ub9b0 \ud314)\n\n| Bone | X | Y | Z | \uc124\uba85 |\n|------|---|---|---|------|\n| clavicle_l | 0 | 0 | -5 | \uc67c\ucabd \uc5b4\uae68 \uc790\uc5f0\uc2a4\ub7fd\uac8c |\n| upperarm_l | 30 | 10 | -20 | \uc67c\ud314 \uc790\uc5f0\uc2a4\ub7fd\uac8c \ub0b4\ub9bc |\n| lowerarm_l | 40 | 0 | 0 | \uc67c\ucabd \ud314\uafc8\uce58 \uc57d\uac04 \uad7d\ud798 |\n| hand_l | 0 | 0 | -10 | \uc67c\uc190 \ubb34\ub98e \uc704\uc5d0 \ub193\uae30 |\n\n---\n\n## \uc870\uc815 \uc21c\uc11c (\uad8c\uc7a5)\n\n1. **pelvis** \uba3c\uc800 \uc704\uce58 \uc124\uc815 (\uc549\uc740 \uc790\uc138\uc758 \uae30\uc900\uc810)\n2. **thigh \u2192 calf \u2192 foot** \uc21c\uc11c\ub85c \ub2e4\ub9ac \uc790\uc138 \uc124\uc815\n3. **spine_01 \u2192 spine_02 \u2192 spine_03** \uc21c\uc11c\ub85c \ucc99\ucd94 \uae30\uc6b8\uae30 \uc124\uc815\n4. **neck_01 \u2192 head** \uc21c\uc11c\ub85c \uba38\ub9ac \uc704\uce58 \uc124\uc815\n5. **clavicle \u2192 upperarm \u2192 lowerarm \u2192 hand** \uc21c\uc11c\ub85c \ud314 \uc124\uc815 (\uc624\ub978\ud314 \uba3c\uc800)\n\n---\n\n## ControlNet \uac15\ub3c4 \uc124\uc815\n\n### \uad8c\uc7a5 \uac15\ub3c4: **0.65 ~ 0.80**\n\n| \uac15\ub3c4 | \ud6a8\uacfc | \uc0ac\uc6a9 \uc0c1\ud669 |\n|------|------|-----------|\n| 0.5 \uc774\ud558 | \ud3ec\uc988 \ubc18\uc601 \uc57d\ud568, \uce90\ub9ad\ud130 \uc790\uc720\ub3c4 \ub192\uc74c | \ud3ec\uc988\ubcf4\ub2e4 \uce90\ub9ad\ud130 \uc678\ud615\uc774 \ub354 \uc911\uc694\ud560 \ub54c |\n| 0.65 | **\uc790\uc5f0\uc2a4\ub7ec\uc6b4 \uade0\ud615** | \uc77c\ubc18\uc801\uc778 \uacbd\uc6b0 \uad8c\uc7a5 \uc2dc\uc791\uac12 |\n| 0.75 | \ud3ec\uc988 \ucda9\uc2e4\ub3c4 \ub192\uc74c | \ubcf5\uc7a1\ud55c \ud314 \uc704\uce58\ub97c \uc815\ud655\ud788 \uc7ac\ud604\ud560 \ub54c |\n| 0.80 | \uac15\ud55c \ud3ec\uc988 \uac15\uc81c | \ud3ec\uc988\uac00 \ubc18\ub4dc\uc2dc \uc77c\uce58\ud574\uc57c \ud560 \ub54c |\n| 0.9 \uc774\uc0c1 | \ud3ec\uc988 \uacfc\ub3c4\ud558\uac8c \uac15\uc81c, \uc5b4\uc0c9\ud574\uc9c8 \uc218 \uc788\uc74c | \ud2b9\uc218\ud55c \uacbd\uc6b0\uc5d0\ub9cc \uc0ac\uc6a9 |\n\n### \ucd94\uac00 \ud301\n\n- **Start percent: 0.0, End percent: 1.0** (\uc804\uccb4 \uc2a4\ud15d\uc5d0 \uc801\uc6a9)\n- \uc5bc\uad74 \ub514\ud14c\uc77c\uc774 \uc911\uc694\ud558\uba74 **0.65**\ubd80\ud130 \ud14c\uc2a4\ud2b8\n- \uc190 \ud3ec\uc988\uac00 \uc798 \uc548 \ub098\uc624\uba74 **0.75~0.80**\uc73c\ub85c \uc62c\ub9ac\uae30\n- \uc637/\uba38\ub9ac\uce74\ub77d\uc774 \ubd80\uc790\uc5f0\uc2a4\ub7ec\uc6b0\uba74 \uac15\ub3c4\ub97c **0.05\uc529 \ub0ae\ucd94\uae30**\n\n---\n\n## \uc790\uc8fc \ubc1c\uc0dd\ud558\ub294 \ubb38\uc81c\uc640 \ud574\uacb0\n\n| \ubb38\uc81c | \uc6d0\uc778 | \ud574\uacb0 \ubc29\ubc95 |\n|------|------|-----------|\n| \uc190\uc774 \uc5bc\uad74\uc5d0 \ubb3b\ud798 | hand_r Z\uac12 \uacfc\ub3c4 | hand_r Z\ub97c 10~15 \uc815\ub3c4\ub85c \uc904\uc784 |\n| \ud314\uafc8\uce58 \ubc29\ud5a5 \uc774\uc0c1 | upperarm_r Y\uac12 \uc870\uc815 \ud544\uc694 | Y\ub97c -10 ~ -30 \ubc94\uc704\uc5d0\uc11c \ud14c\uc2a4\ud2b8 |\n| \uc0c1\uccb4\uac00 \ub108\ubb34 \uc219\uc5ec\uc9d0 | spine_02/03 X\uac12 \uacfc\ub3c4 | X\ub97c 5\uc529 \uc904\uc5ec\uac00\uba70 \uc870\uc815 |\n| \uba38\ub9ac\uac00 \ub108\ubb34 \uae30\uc6b8\uc5b4\uc9d0 | head Z\uac12 \uacfc\ub3c4 | head Z\ub97c 3~5 \uc815\ub3c4\ub85c \uc904\uc784 |\n| \ub2e4\ub9ac \uc790\uc138 \ubd80\uc790\uc5f0\uc2a4\ub7ec\uc6c0 | thigh X\uac00 \ubd80\uc871 | thigh X\ub97c 75~85 \ubc94\uc704\uc5d0\uc11c \uc870\uc815 |\n\n---\n\n## \ucc38\uace0: \uc67c\uc190\uc73c\ub85c \ud131\uc744 \uad34\ub294 \uacbd\uc6b0\n\n\uc624\ub978\ud314/\uc67c\ud314 \uc124\uc815\uc744 \ubc18\uc804\ud558\uba74 \ub429\ub2c8\ub2e4:\n- \uc704\uc758 `_r` (\uc624\ub978\ucabd) \uc124\uc815\uc744 `_l` (\uc67c\ucabd)\uc5d0 \uc801\uc6a9\n- \uc704\uc758 `_l` (\uc67c\ucabd) \uc124\uc815\uc744 `_r` (\uc624\ub978\ucabd)\uc5d0 \uc801\uc6a9\n- spine_03\uc758 Z\uac12 \ubd80\ud638\ub97c \ubc18\uc804: `-3` \u2192 `+3`\n- head\uc758 Z\uac12 \ubd80\ud638\ub97c \ubc18\uc804: `+8` \u2192 `-8`\n"}], "grading": {"eval_id": 2, "eval_name": "sitting-chin-rest-pose", "config": "without_skill", "expectations": [{"text": "pelvis, thigh, calf bone values specified for sitting pose", "passed": true, "evidence": "thigh_l/r X:80, calf_l/r X:-90 in table format with descriptions"}, {"text": "upperarm, lowerarm, hand values for chin-resting arm specified", "passed": true, "evidence": "upperarm_r [45,-20,30], lowerarm_r [80,0,-10], hand_r [-10,0,20] - detailed table"}, {"text": "ControlNet strength recommendation with specific value and reasoning", "passed": true, "evidence": "0.65-0.80 range; 0.65 as start, 0.75-0.80 for complex arm positions"}, {"text": "Additional tips specific to sitting pose (chair prompt, hand warnings)", "passed": false, "evidence": "No mention of needing chair in prompt, no hand-specific warnings for this pose"}]}}, {"id": "eval-3-with_skill", "prompt": "I checked the generated image and the pose is correct but the hands look weird. Also the character face doesn't match the prompt. How do I fix this?", "eval_id": 3, "outputs": [{"name": "response.md", "type": "text", "content": "# \uc190 \uc774\uc0c1 + \uc5bc\uad74 \ubd88\uc77c\uce58 \ubb38\uc81c \ud574\uacb0 \uac00\uc774\ub4dc\n\n\ud3ec\uc988\ub294 \uc815\ud655\ud558\uac8c \ub098\uc654\uc9c0\ub9cc \uc190\uacfc \uc5bc\uad74\uc5d0 \ubb38\uc81c\uac00 \uc788\ub294 \uc0c1\ud669\uc774\ub2e4. \ub450 \uac00\uc9c0 \ubb38\uc81c\ub97c \uac01\uac01 \ubd84\ub9ac\ud574\uc11c \ud574\uacb0\ud558\uba74 \ub41c\ub2e4.\n\n---\n\n## \ubb38\uc81c 1: \uc190\uc774 \uc774\uc0c1\ud558\uac8c \ub098\uc634\n\n### \uc6d0\uc778\n\nDWPose(OpenPose \uc2a4\ucf08\ub808\ud1a4 \ucd94\ucd9c\uae30)\ub294 \uc190\uac00\ub77d\uc758 \uc138\ubc00\ud55c \uad00\uc808\uc744 \uc798 \uc778\uc2dd\ud558\uc9c0 \ubabb\ud55c\ub2e4. 3D \ub9c8\ub124\ud0b9\uc5d0\uc11c `hand_l/r` \ubcf8\uc758 \ubc29\ud5a5\uc774 \uc5b4\uc0c9\ud558\uac8c \uc124\uc815\ub418\uba74, DWPose\uac00 \uc190 \ud0a4\ud3ec\uc778\ud2b8\ub97c \uc798\ubabb \ucd94\ucd9c\ud558\uace0, ControlNet\uc774 \uadf8 \uc624\ub958\ub97c \uadf8\ub300\ub85c \uc774\ubbf8\uc9c0\uc5d0 \ubc18\uc601\ud55c\ub2e4.\n\n### \ud574\uacb0 \ubc29\ubc95 A: hand \ubcf8 \uc218\ub3d9 \uc870\uc815 (\uadfc\ubcf8 \ud574\uacb0)\n\nVNCCS_PoseStudio\uc5d0\uc11c \uc190\ubaa9/\uc190 \ubcf8\uc744 \uc9c1\uc811 \uc870\uc815\ud55c\ub2e4.\n\n**\uc870\uc815\ud560 \ubcf8:**\n- `hand_l` \u2014 \uc67c\uc190 \ubc29\ud5a5\n- `hand_r` \u2014 \uc624\ub978\uc190 \ubc29\ud5a5\n- `lowerarm_l/r` \u2014 \uc544\ub798\ud314 (\uc190\ubaa9 \ubc29\ud5a5\uc5d0 \uc601\ud5a5)\n\n**\uc870\uc815 \ubc29\ud5a5 [X(\uc804\ud6c4), Y(\uc88c\uc6b0 \ud2c0\uae30), Z(\ub4e4\uc5b4\uc62c\ub9ac\uae30)]:**\n\n\uc190\uc774 \uc790\uc5f0\uc2a4\ub7fd\uac8c \ub0b4\ub824\uc9c4 \uae30\ubcf8 \uc790\uc138 \uae30\uc900:\n```json\n\"hand_l\": [0, 0, 0],\n\"hand_r\": [0, 0, 0]\n```\n\n\uc190\ubc14\ub2e5\uc774 \uc55e\uc744 \ud5a5\ud558\uac8c (\uc77c\ubc18\uc801\uc73c\ub85c \uac00\uc7a5 \uc548\uc815\uc801):\n```json\n\"hand_l\": [-10, 0, 0],\n\"hand_r\": [-10, 0, 0]\n```\n\n\uc190\uc774 \ubab8 \uc606\uc5d0 \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc704\uce58\ud558\ub294 \uacbd\uc6b0:\n```json\n\"lowerarm_l\": [0, -15, 0],\n\"lowerarm_r\": [0, 15, 0],\n\"hand_l\": [-5, -10, 0],\n\"hand_r\": [-5, 10, 0]\n```\n\n**\ud575\uc2ec \uc6d0\uce59:** \uc190\ubaa9\uc774 \uaebe\uc774\uac70\ub098 \ube44\ud2c0\ub9b0 \uac01\ub3c4\ub97c \ud53c\ud558\uace0, `lowerarm`\uacfc `hand` \ubcf8\uc758 \ubc29\ud5a5\uc774 \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc774\uc5b4\uc9c0\ub3c4\ub85d \ub9de\ucd98\ub2e4.\n\n### \ud574\uacb0 \ubc29\ubc95 B: \ubd80\uc815 \ud504\ub86c\ud504\ud2b8 \uac15\ud654\n\n\ud504\ub86c\ud504\ud2b8 \uc218\uc815\uc73c\ub85c \uc190 \uc624\ub958\ub97c \uc5b5\uc81c\ud55c\ub2e4.\n\n**\uc6cc\ud06c\ud50c\ub85c\uc6b0 JSON \uc218\uc815 \uc704\uce58:**\n- \ub178\ub4dc ID 7 (`title: \"Negative Prompt\"`) \u2192 `widgets_values[0]`\n\n**\uac15\ud654\ub41c \ubd80\uc815 \ud504\ub86c\ud504\ud2b8:**\n```\nbad anatomy, extra limbs, mutated hands, poorly drawn hands,\nextra fingers, missing fingers, fused fingers, too many fingers,\nmalformed hands, deformed hands, blurry hands,\nlow quality, ugly, worst quality, text, watermark\n```\n\n### \ud574\uacb0 \ubc29\ubc95 C: ControlNet \uac15\ub3c4 \uad6c\uac04 \uc870\uc815\n\n\uc190 \ubd80\ubd84\ub9cc ControlNet \uc601\ud5a5\uc744 \uc57d\ud558\uac8c \uc918\uc11c \ubaa8\ub378\uc774 \uc790\uccb4\uc801\uc73c\ub85c \uc190\uc744 \ub354 \uc790\uc5f0\uc2a4\ub7fd\uac8c \uadf8\ub9ac\ub3c4\ub85d \uc720\ub3c4\ud55c\ub2e4.\n\n**\uc6cc\ud06c\ud50c\ub85c\uc6b0 JSON \uc218\uc815 \uc704\uce58:**\n- \ub178\ub4dc ID 9 (`ControlNetApplyAdvanced`) \u2192 `start_percent`, `end_percent` \ud30c\ub77c\ubbf8\ud130\n\n\ud604\uc7ac \uae30\ubcf8\uac12\uc774 `0.0 ~ 1.0` (\uc804 \uad6c\uac04 \uc801\uc6a9)\uc774\ub77c\uba74:\n```\nstart_percent: 0.0\nend_percent: 0.85\n```\n\ub9c8\uc9c0\ub9c9 15% \uad6c\uac04\uc5d0\uc11c ControlNet\uc744 \ub044\uba74 \ubaa8\ub378\uc774 \uc190 \ub514\ud14c\uc77c\uc744 \uc790\uccb4 \ud310\ub2e8\uc73c\ub85c \ub9c8\ubb34\ub9ac\ud55c\ub2e4.\n\n**\ub610\ub294 \uac15\ub3c4 \uc790\uccb4\ub97c \uc18c\ud3ed \ub0ae\ucda4:**\n```\nControlNet \uac15\ub3c4: 0.8 \u2192 0.75\n```\n\n---\n\n## \ubb38\uc81c 2: \uce90\ub9ad\ud130 \uc5bc\uad74\uc774 \ud504\ub86c\ud504\ud2b8\uc640 \ub2e4\ub984\n\n### \uc6d0\uc778\n\nSDXL\uc740 ControlNet OpenPose\uc758 \ud3ec\uc988 \uc2e0\ud638\ub97c \uc6b0\uc120 \ub530\ub974\uba74\uc11c \ud504\ub86c\ud504\ud2b8\uc758 \uc678\ubaa8 \ubb18\uc0ac\ub97c \uc57d\ud558\uac8c \ubc18\uc601\ud558\ub294 \uacbd\ud5a5\uc774 \uc788\ub2e4. \ud2b9\ud788 CFG Scale\uc774 \ub0ae\uac70\ub098 \ud504\ub86c\ud504\ud2b8\uc5d0 \uc678\ubaa8 \ubb18\uc0ac\uac00 \ubd80\uc871\ud558\uba74 \ubaa8\ub378\uc774 \uae30\ubcf8 \uc5bc\uad74\ub85c \uc0dd\uc131\ud55c\ub2e4.\n\n### \ud574\uacb0 \ubc29\ubc95 A: CFG Scale \ub192\uc774\uae30 (\uac00\uc7a5 \ube60\ub978 \ud6a8\uacfc)\n\n**\uc6cc\ud06c\ud50c\ub85c\uc6b0 JSON \uc218\uc815 \uc704\uce58:**\n- \ub178\ub4dc ID 11 (`KSampler`) \u2192 `cfg` \uac12\n\n```\n\ud604\uc7ac \uae30\ubcf8\uac12: 7.0\n\uad8c\uc7a5 \ubcc0\uacbd\uac12: 8.0 ~ 9.0\n```\n\nCFG Scale\uc744 \ub192\uc774\uba74 \ubaa8\ub378\uc774 \ud504\ub86c\ud504\ud2b8\ub97c \ub354 \uac15\ud558\uac8c \ub530\ub978\ub2e4. \ub2e8, 10 \uc774\uc0c1\uc73c\ub85c \uc62c\ub9ac\uba74 \uc0c9\uc0c1\uc774 \uacfc\ud3ec\ud654\ub418\uac70\ub098 \uc544\ud2f0\ud329\ud2b8\uac00 \uc0dd\uae38 \uc218 \uc788\uc73c\ub2c8 8~9 \ubc94\uc704\uc5d0\uc11c \ud14c\uc2a4\ud2b8\ud55c\ub2e4.\n\n### \ud574\uacb0 \ubc29\ubc95 B: \uae0d\uc815 \ud504\ub86c\ud504\ud2b8\uc5d0 \uc5bc\uad74 \ubb18\uc0ac \uac15\ud654\n\n**\uc6cc\ud06c\ud50c\ub85c\uc6b0 JSON \uc218\uc815 \uc704\uce58:**\n- \ub178\ub4dc ID 6 (`title: \"Positive Prompt\"`) \u2192 `widgets_values[0]`\n- \ub178\ub4dc ID 2 (VNCCS_PoseStudio) \u2192 `widgets_values[0]` \ub0b4 JSON\uc758 `\"user_prompt\"` \ud544\ub4dc\n\n**\uc218\uc815 \uc804 \uc608\uc2dc (\ubd80\uc871\ud55c \uc0c1\ud0dc):**\n```\n1girl, brown hair, school uniform, full body, high quality\n```\n\n**\uc218\uc815 \ud6c4 \uc608\uc2dc (\uc5bc\uad74 \ubb18\uc0ac \uac15\ud654):**\n```\n1girl, 18 years old, long brown wavy hair, large blue eyes,\nsharp nose, small lips, pale skin, delicate facial features,\nschool uniform, full body, detailed face, beautiful face,\nhigh quality, masterpiece, best quality\n```\n\n**\uc5bc\uad74 \uad00\ub828 \uac15\ud654 \ud0dc\uadf8 \ubaa9\ub85d (\uc6d0\ud558\ub294 \uac83 \uc120\ud0dd \ucd94\uac00):**\n```\ndetailed face          \u2192 \uc5bc\uad74 \ub514\ud14c\uc77c \uac15\ud654\nbeautiful face         \u2192 \uc804\uccb4\uc801\uc73c\ub85c \uc544\ub984\ub2e4\uc6b4 \uc5bc\uad74 \uc720\ub3c4\nperfect face           \u2192 \uc5bc\uad74 \uc644\uc131\ub3c4 \ud5a5\uc0c1\nsharp eyes             \u2192 \ub208 \uc120\uba85\ud558\uac8c\nexpressive eyes        \u2192 \ub208 \ud45c\ud604\ub825 \uac15\ud654\nrealistic skin texture \u2192 \ud53c\ubd80 \uc9c8\uac10 (\uc0ac\uc2e4\uc801 \uc2a4\ud0c0\uc77c)\nsoft skin              \u2192 \ubd80\ub4dc\ub7ec\uc6b4 \ud53c\ubd80 (\uc560\ub2c8 \uc2a4\ud0c0\uc77c)\n```\n\n### \ud574\uacb0 \ubc29\ubc95 C: user_prompt \ud544\ub4dc\ub3c4 \ubc18\ub4dc\uc2dc \ub3d9\uae30\ud654\n\nVNCCS_PoseStudio \ub178\ub4dc \ub0b4\ubd80\uc758 `user_prompt`\uc640 \ub178\ub4dc ID 6\uc758 Positive Prompt\uac00 **\ub2e4\ub978 \ub0b4\uc6a9**\uc774\uba74 \ucda9\ub3cc\uc774 \uc0dd\uae34\ub2e4.\n\n**\ud655\uc778 \ubc29\ubc95:**\n\n`VNCCS_PoseStudio_Local_SDXL.json` \ud30c\uc77c\uc5d0\uc11c:\n```json\n// \ub178\ub4dc ID 2\n\"widgets_values\": [\"{... \\\"user_prompt\\\": \\\"\uc5ec\uae30 \ub0b4\uc6a9\\\", ...}\"]\n\n// \ub178\ub4dc ID 6\n\"widgets_values\": [\"\uc5ec\uae30 \ub0b4\uc6a9\"]\n```\n\n\ub450 \uacf3\uc758 \uce90\ub9ad\ud130 \ubb18\uc0ac\uac00 **\uc77c\uce58**\ud558\ub3c4\ub85d \ub9de\ucdb0\uc57c \ud55c\ub2e4.\n\n### \ud574\uacb0 \ubc29\ubc95 D: \uc2a4\ud15d \uc218 \ub192\uc774\uae30\n\n\uc5bc\uad74 \ub514\ud14c\uc77c\uc740 \uc2a4\ud15d \uc218\uac00 \uc801\uc73c\uba74 \ud750\ub9bf\ud558\uac8c \ub098\uc628\ub2e4.\n\n**\uc6cc\ud06c\ud50c\ub85c\uc6b0 JSON \uc218\uc815 \uc704\uce58:**\n- \ub178\ub4dc ID 11 (`KSampler`) \u2192 `steps` \uac12\n\n```\n\ud604\uc7ac \uae30\ubcf8\uac12: 25\n\uad8c\uc7a5 \ubcc0\uacbd\uac12: 30 ~ 35\n```\n\n---\n\n## \ub450 \ubb38\uc81c\ub97c \ub3d9\uc2dc\uc5d0 \uc801\uc6a9\ud560 \ub54c \uad8c\uc7a5 \uc124\uc815\uac12 \uc694\uc57d\n\n| \ud56d\ubaa9 | \uae30\uc874 \uac12 | \ubcc0\uacbd \uac12 | \uc218\uc815 \uc704\uce58 |\n|------|---------|---------|-----------|\n| CFG Scale | 7.0 | 8.5 | KSampler (ID:11) |\n| \uc2a4\ud15d \uc218 | 25 | 30 | KSampler (ID:11) |\n| ControlNet \uac15\ub3c4 | 0.8 | 0.75~0.8 \uc720\uc9c0 | ControlNetApplyAdvanced (ID:9) |\n| ControlNet end_percent | 1.0 | 0.85 | ControlNetApplyAdvanced (ID:9) |\n| \uae0d\uc815 \ud504\ub86c\ud504\ud2b8 | \uae30\ubcf8 | \uc5bc\uad74 \ubb18\uc0ac \ud0dc\uadf8 \ucd94\uac00 | \ub178\ub4dc ID 6 + ID 2 user_prompt |\n| \ubd80\uc815 \ud504\ub86c\ud504\ud2b8 | \uae30\ubcf8 | \uc190 \uad00\ub828 \ud0dc\uadf8 \ucd94\uac00 | \ub178\ub4dc ID 7 |\n\n---\n\n## \uc791\uc5c5 \uc21c\uc11c \uad8c\uc7a5\n\n1. `hand_l/r` \ubcf8\uc744 VNCCS_PoseStudio\uc5d0\uc11c \uc790\uc5f0\uc2a4\ub7ec\uc6b4 \uac01\ub3c4\ub85c \uc870\uc815 (lowerarm\uacfc \ubc29\ud5a5 \uc77c\uce58)\n2. \ubd80\uc815 \ud504\ub86c\ud504\ud2b8\uc5d0 \uc190 \uc624\ub958 \ud0dc\uadf8 \ucd94\uac00\n3. \uae0d\uc815 \ud504\ub86c\ud504\ud2b8\uc5d0 \uc5bc\uad74 \ubb18\uc0ac \uc0c1\uc138 \ud0dc\uadf8 \ucd94\uac00\n4. `user_prompt`\uc640 \ub178\ub4dc ID 6 \ud504\ub86c\ud504\ud2b8 \ub3d9\uae30\ud654 \ud655\uc778\n5. CFG Scale\uc744 7.0 \u2192 8.5\ub85c \ubcc0\uacbd\n6. steps\ub97c 25 \u2192 30\uc73c\ub85c \ubcc0\uacbd\n7. ControlNet `end_percent`\ub97c 1.0 \u2192 0.85\ub85c \ubcc0\uacbd\n8. \uc0dd\uc131 \uc2e4\ud589 \ud6c4 \uacb0\uacfc \ud655\uc778\n\n\ud3ec\uc988\uac00 \uc774\ubbf8 \ub9de\uc73c\ub2c8 ControlNet \uac15\ub3c4(0.8)\ub294 \ud06c\uac8c \uac74\ub4dc\ub9ac\uc9c0 \uc54a\uc544\ub3c4 \ub41c\ub2e4. \uc190\uacfc \uc5bc\uad74\ub9cc \uc9d1\uc911\uc801\uc73c\ub85c \uc218\uc815\ud558\ub294 \uac83\uc774 \ud3ec\uc988 \uc720\uc9c0\uc5d0 \uc720\ub9ac\ud558\ub2e4.\n"}], "grading": {"eval_id": 3, "eval_name": "fix-bad-hands-wrong-face", "config": "with_skill", "expectations": [{"text": "hand_l/r and lowerarm bone adjustment values provided for fixing hands", "passed": true, "evidence": "lowerarm_l/r [0,+-15,0], hand_l/r [-5,+-10,0] with core principle explained"}, {"text": "ControlNet end_percent adjustment suggested to fix hands", "passed": true, "evidence": "end_percent 1.0 -> 0.85 suggested; or strength 0.8 -> 0.75"}, {"text": "Specific prompt improvement tags for face and CFG scale adjustment", "passed": true, "evidence": "CFG 7.0->8.5, specific face tag list, before/after prompt example"}, {"text": "user_prompt sync with node ID 6 mentioned", "passed": true, "evidence": "Explicitly calls out node ID 2 user_prompt must match node ID 6 - unique skill knowledge"}, {"text": "Ordered action list for applying fixes", "passed": true, "evidence": "8-step ordered action list provided"}]}}, {"id": "eval-3-without_skill", "prompt": "I checked the generated image and the pose is correct but the hands look weird. Also the character face doesn't match the prompt. How do I fix this?", "eval_id": 3, "outputs": [{"name": "response.md", "type": "text", "content": "# \uc190 \uc774\uc0c1\ud568 + \uc5bc\uad74\uc774 \ud504\ub86c\ud504\ud2b8\uc640 \ub2e4\ub978 \ubb38\uc81c \ud574\uacb0 \uac00\uc774\ub4dc\n\n\ud604\uc7ac \uc6cc\ud06c\ud50c\ub85c\uc6b0: VNCCS_PoseStudio \u2192 DWPose \u2192 ControlNet OpenPose (strength 0.8) \u2192 KSampler (CFG 7.0, steps 25) \u2192 juggernautXL\n\n---\n\n## \ubb38\uc81c 1: \uc190\uc774 \uc774\uc0c1\ud558\uac8c \ub098\uc654\uc744 \ub54c\n\n### \uc6d0\uc778\n- OpenPose ControlNet\uc740 \uc190\uac00\ub77d \uc138\ubd80 \uad6c\uc870\ub97c \uc798 \uc7a1\uc9c0 \ubabb\ud568 (\uc190\ubaa9 \uad00\uc808\ub9cc \uac80\ucd9c, \uac1c\ubcc4 \uc190\uac00\ub77d keypoint\ub294 \ubd80\uc815\ud655)\n- DWPreprocessor\uc758 resolution\uc774 512\ub85c \uc124\uc815\ub418\uc5b4 \uc788\uc5b4 \uc190 \uc601\uc5ed \ub514\ud14c\uc77c \uc190\uc2e4 \uac00\ub2a5\n- ControlNet strength\uac00 0.8\uc774\uba74 \ud3ec\uc988\ub294 \uc798 \ub530\ub974\uc9c0\ub9cc, \uc190\uc740 \uc5ec\uc804\ud788 \ubaa8\ub378 \uc790\uccb4\uac00 \uc7ac\ud574\uc11d\ud568\n\n### \ud574\uacb0 \ubc29\ubc95\n\n#### \ubc29\ubc95 A: \ub124\uac70\ud2f0\ube0c \ud504\ub86c\ud504\ud2b8 \uac15\ud654 (\uc989\uc2dc \uc801\uc6a9 \uac00\ub2a5)\n\ud604\uc7ac \ub124\uac70\ud2f0\ube0c \ud504\ub86c\ud504\ud2b8\uc5d0 \uc774\ubbf8 `mutated hands`\uac00 \uc788\uc74c. \ub2e4\uc74c\uc744 \ucd94\uac00:\n```\nbad hands, extra fingers, missing fingers, fused fingers, too many fingers, poorly drawn hands, deformed hands, malformed limbs\n```\n\n#### \ubc29\ubc95 B: ADetailer \ub610\ub294 Inpaint\ub85c \uc190 \ud6c4\ucc98\ub9ac\n1. \uc0dd\uc131\ub41c \uc774\ubbf8\uc9c0\uc5d0\uc11c \uc190 \uc601\uc5ed\ub9cc \ub9c8\uc2a4\ud06c\n2. KSampler \uc55e\uc5d0 VAEEncodeForInpaint \uc5f0\uacb0\n3. denoise\ub97c 0.5~0.7\ub85c \ub0ae\ucdb0\uc11c \uc190 \ubd80\ubd84\ub9cc \uc7ac\uc0dd\uc131\n\n#### \ubc29\ubc95 C: DWPose resolution \uc62c\ub9ac\uae30\n- DWPreprocessor \ub178\ub4dc\uc758 resolution\uc744 512 \u2192 1024\ub85c \ubcc0\uacbd\n- \uc190 keypoint \uac80\ucd9c \uc815\ud655\ub3c4 \ud5a5\uc0c1\n\n#### \ubc29\ubc95 D: ControlNet\uc5d0 \uc190 \uc804\uc6a9 \ucd94\uac00\n- OpenPose ControlNet \uc678\uc5d0 `depth` \ub610\ub294 `tile` ControlNet\uc744 \uc190 \uc601\uc5ed\uc5d0\ub9cc \uc801\uc6a9\n\n---\n\n## \ubb38\uc81c 2: \uce90\ub9ad\ud130 \uc5bc\uad74\uc774 \ud504\ub86c\ud504\ud2b8\uc640 \ub2e4\ub97c \ub54c\n\n### \uc6d0\uc778\n- \ud604\uc7ac Positive Prompt: `anime illustration, 1girl, full body, detailed character design, high quality, masterpiece, best quality`\n- \uc5bc\uad74 \ud2b9\uc9d5 \ubb18\uc0ac\uac00 \uc804\ud600 \uc5c6\uc74c (\ub208 \uc0c9, \uba38\ub9ac \uc0c9, \ud45c\uc815, \ub098\uc774 \ub4f1 \ubbf8\uc9c0\uc815)\n- OpenPose ControlNet\uc740 \uc5bc\uad74 \ubc29\ud5a5/\uc704\uce58\ub294 \uc7a1\uc9c0\ub9cc \uc5bc\uad74 \uc678\ubaa8\ub294 \ubaa8\ub378\uc774 \uc790\uc720\ub86d\uac8c \uc0dd\uc131\n- CFG Scale 7.0 \u2192 \ud504\ub86c\ud504\ud2b8 \uc900\uc218\ub3c4\uac00 \ub0ae\uc9c0 \uc54a\uc9c0\ub9cc, \uce90\ub9ad\ud130 \uc678\ubaa8 \ubb18\uc0ac\uac00 \uc5c6\uc73c\uba74 \ud6a8\uacfc \uc5c6\uc74c\n\n### \ud574\uacb0 \ubc29\ubc95\n\n#### \ubc29\ubc95 A: \ud504\ub86c\ud504\ud2b8\uc5d0 \uc5bc\uad74 \ud2b9\uc9d5 \uba85\uc2dc (\ud575\uc2ec)\nPositive Prompt \ub178\ub4dc\uc5d0 \uc6d0\ud558\ub294 \uc5bc\uad74 \ud2b9\uc9d5\uc744 \uad6c\uccb4\uc801\uc73c\ub85c \ucd94\uac00:\n```\nanime illustration, 1girl, full body, detailed character design,\n[\uba38\ub9ac \uc0c9]hair, [\ub208 \uc0c9]eyes, [\ud45c\uc815], [\ub098\uc774\ub300],\nhigh quality, masterpiece, best quality\n```\n\uc608\uc2dc:\n```\nanime illustration, 1girl, full body, detailed character design,\nlong blonde hair, blue eyes, smiling, 18 years old,\nhigh quality, masterpiece, best quality\n```\n\n#### \ubc29\ubc95 B: CFG Scale \ub192\uc774\uae30\n- KSampler\uc758 CFG Scale: 7.0 \u2192 8.0~10.0\uc73c\ub85c \uc99d\uac00\n- \ud504\ub86c\ud504\ud2b8 \uc9c0\uc2dc\ub97c \ub354 \uac15\ud558\uac8c \ub530\ub984\n- \ub108\ubb34 \ub192\uc73c\uba74(>12) \uc544\ud2f0\ud329\ud2b8 \ubc1c\uc0dd \uc8fc\uc758\n\n#### \ubc29\ubc95 C: FaceDetailer / ADetailer \ucd94\uac00\n- \uc5bc\uad74 \uc601\uc5ed\ub9cc \ubcc4\ub3c4\ub85c \uc7ac\uc0dd\uc131\ud558\ub294 \ub178\ub4dc \ucd94\uac00\n- ComfyUI\uc5d0\uc11c\ub294 `FaceDetailer` (Impact Pack) \uc0ac\uc6a9\n- \uc5bc\uad74 \uc804\uc6a9 \ud504\ub86c\ud504\ud2b8\ub85c \uc138\ubc00\ud55c \uc81c\uc5b4 \uac00\ub2a5\n\n#### \ubc29\ubc95 D: IP-Adapter\ub85c \uc5bc\uad74 \ub808\ud37c\ub7f0\uc2a4 \uc9c0\uc815\n- \uc6d0\ud558\ub294 \uce90\ub9ad\ud130 \uc5bc\uad74 \uc774\ubbf8\uc9c0\ub97c IP-Adapter Face ID\uc5d0 \uc5f0\uacb0\n- \ud504\ub86c\ud504\ud2b8\ub9cc\uc73c\ub85c \uc5bc\uad74 \ud2b9\uc9d5\uc744 \uc81c\uc5b4\ud558\ub294 \uac83\ubcf4\ub2e4 \ud6e8\uc52c \uc815\ud655\n\n#### \ubc29\ubc95 E: ControlNet OpenPose\uc758 strength \uc870\uc815\n- \ud604\uc7ac strength: 0.8\n- \uc5bc\uad74 \ud45c\ud604\uc774 \ub108\ubb34 \ud3ec\uc988\uc5d0 \uc81c\uc57d\ubc1b\ub294\ub2e4\uba74 end_percent\ub97c 0.7\ub85c \ub0ae\ucd94\uae30\n  (\ud604\uc7ac start: 0.0, end: 1.0)\n- ControlNetApplyAdvanced\uc5d0\uc11c `end_percent`\ub97c 0.7~0.8\ub85c \ubcc0\uacbd\n\n---\n\n## \ud604\uc7ac \uc6cc\ud06c\ud50c\ub85c\uc6b0 \uc124\uc815 \uc694\uc57d\n\n| \ub178\ub4dc | \ud604\uc7ac \uc124\uc815 | \uad8c\uc7a5 \ubcc0\uacbd |\n|------|-----------|-----------|\n| DWPreprocessor resolution | 512 | 1024 (\uc190 \ub514\ud14c\uc77c) |\n| ControlNet strength | 0.8 | 0.7~0.85 \uc720\uc9c0 |\n| ControlNet end_percent | 1.0 | 0.7~0.8 (\uc5bc\uad74 \uc790\uc720\ub3c4 \uc99d\uac00) |\n| KSampler CFG | 7.0 | 8.0~9.0 |\n| KSampler steps | 25 | 25~30 \uc720\uc9c0 |\n| Positive Prompt | \uc5bc\uad74 \ud2b9\uc9d5 \uc5c6\uc74c | \uad6c\uccb4\uc801 \uc5bc\uad74 \ubb18\uc0ac \ucd94\uac00 |\n| Negative Prompt | \uae30\ubcf8\uc801 bad hands \uc788\uc74c | \uc190 \uad00\ub828 \ub124\uac70\ud2f0\ube0c \uac15\ud654 |\n\n---\n\n## \uc6b0\uc120\uc21c\uc704 \uad8c\uc7a5 \uc561\uc158\n\n1. **\uc989\uc2dc**: Positive Prompt\uc5d0 \uc6d0\ud558\ub294 \uc5bc\uad74 \ud2b9\uc9d5 (\uba38\ub9ac \uc0c9, \ub208 \uc0c9, \ud45c\uc815) \uba85\uc2dc\n2. **\uc989\uc2dc**: Negative Prompt\uc5d0 \uc190 \uad00\ub828 \ud0a4\uc6cc\ub4dc \ucd94\uac00\n3. **\uc124\uc815 \ubcc0\uacbd**: DWPreprocessor resolution\uc744 1024\ub85c \uc62c\ub9ac\uae30\n4. **\uc120\ud0dd\uc801**: CFG Scale\uc744 7.0 \u2192 8.5\ub85c \uc62c\ub9ac\uae30\n5. **\uace0\uae09**: FaceDetailer \ub610\ub294 IP-Adapter Face \ucd94\uac00 (\ub354 \uc815\ud655\ud55c \uc5bc\uad74 \uc81c\uc5b4)\n"}], "grading": {"eval_id": 3, "eval_name": "fix-bad-hands-wrong-face", "config": "without_skill", "expectations": [{"text": "hand_l/r and lowerarm bone adjustment values provided for fixing hands", "passed": false, "evidence": "No bone adjustment mentioned. Focuses on negative prompt and DWPreprocessor resolution only"}, {"text": "ControlNet end_percent adjustment suggested to fix hands", "passed": true, "evidence": "end_percent 1.0 -> 0.75 mentioned"}, {"text": "Specific prompt improvement tags for face and CFG scale adjustment", "passed": true, "evidence": "CFG 7.0->8.5-9.0, face description prompts, hand negative prompts"}, {"text": "user_prompt sync with node ID 6 mentioned", "passed": false, "evidence": "No mention of user_prompt field in VNCCS_PoseStudio node needing sync"}, {"text": "Ordered action list for applying fixes", "passed": false, "evidence": "Fixes listed as separate sections, no explicit numbered action sequence"}]}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "pose-transfer", "skill_path": "C:\\Users\\PC\\.claude\\skills\\pose-transfer", "executor_model": "claude-sonnet-4-6", "timestamp": "2026-06-12", "evals_run": ["ballet-pose-transfer", "sitting-chin-rest-pose", "fix-bad-hands-wrong-face"], "runs_per_configuration": 1}, "runs": [{"config": "with_skill", "label": "With pose-transfer skill", "evals": [{"id": 1, "name": "ballet-pose-transfer", "pass_rate": 1.0, "passed": 5, "total": 5, "duration_s": 126.2, "tokens": 32422}, {"id": 2, "name": "sitting-chin-rest-pose", "pass_rate": 1.0, "passed": 4, "total": 4, "duration_s": 71.6, "tokens": 24839}, {"id": 3, "name": "fix-bad-hands-wrong-face", "pass_rate": 1.0, "passed": 5, "total": 5, "duration_s": 83.0, "tokens": 28773}], "summary": {"mean_pass_rate": 1.0, "mean_duration_s": 93.6, "mean_tokens": 28678, "total_passed": 14, "total_assertions": 14}}, {"config": "without_skill", "label": "Baseline (no skill)", "evals": [{"id": 1, "name": "ballet-pose-transfer", "pass_rate": 0.6, "passed": 3, "total": 5, "duration_s": 74.5, "tokens": 26008}, {"id": 2, "name": "sitting-chin-rest-pose", "pass_rate": 0.75, "passed": 3, "total": 4, "duration_s": 59.0, "tokens": 19994}, {"id": 3, "name": "fix-bad-hands-wrong-face", "pass_rate": 0.4, "passed": 2, "total": 5, "duration_s": 52.8, "tokens": 24391}], "summary": {"mean_pass_rate": 0.583, "mean_duration_s": 62.1, "mean_tokens": 23464, "total_passed": 8, "total_assertions": 14}}], "run_summary": {"delta": {"pass_rate": "+41.7%", "time_seconds": "+31.5s", "tokens": "+5214"}}, "notes": ["With skill 100% vs baseline 58.3% - delta 41.7pp", "Eval 3 biggest gap (100% vs 40%): hand bone adjustment and user_prompt sync not mentioned without skill", "Eval 2 baseline scored 75% - bone list was given in the prompt context", "Skill responses 51% slower and 22% more tokens - cost of more detailed answers", "Key differentiators: node ID references, user_prompt sync knowledge, pose-specific bone JSON values"]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

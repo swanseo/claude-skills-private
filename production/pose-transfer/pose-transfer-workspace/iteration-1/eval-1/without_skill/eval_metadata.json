@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "eval_name": "ballet-pose-transfer",
+  "prompt": "A reference image of a ballet dancer lifting one leg high with arms spread wide. I want to apply this pose to a 20s female anime character in a blue dress and generate with SDXL. How do I do this?",
+  "assertions": [
+    {"text": "Bone values in [X,Y,Z] format for thigh and upperarm bones", "passed": false, "evidence": "Mentions bones but no concrete JSON values"},
+    {"text": "SDXL positive prompt includes blue dress and anime character", "passed": true, "evidence": "Prompt includes blue dress and anime tags"},
+    {"text": "ControlNet strength value in 0.7-1.0 range specified", "passed": true, "evidence": "0.8 stated"},
+    {"text": "Step-by-step workflow execution order provided", "passed": true, "evidence": "5-step guide"},
+    {"text": "Node IDs from actual workflow JSON referenced", "passed": false, "evidence": "No node IDs used"}
+  ]
+}

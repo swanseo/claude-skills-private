@@ -1,0 +1,23 @@
+{
+  "skill_name": "pose-transfer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "발레 댄서가 한쪽 다리를 높이 들어올리고 팔을 벌린 포즈 레퍼런스 이미지가 있어. 이 포즈를 파란 드레스를 입은 20대 여성 애니메이션 캐릭터에 적용해서 SDXL로 생성하고 싶어. 어떻게 하면 돼?",
+      "expected_output": "포즈 분석(다리 각도, 팔 위치), VNCCS_PoseStudio 본 조정 값 제안, 캐릭터 프롬프트 작성, ControlNet 강도 추천, 워크플로우 실행 단계별 안내를 포함해야 함",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "VNCCS_PoseStudio에서 캐릭터가 의자에 앉아서 턱을 괴는 포즈를 만들고 싶은데 어떤 bone을 어떻게 조정해야 해? 그리고 ControlNet 강도를 얼마로 해야 자연스럽게 나올까?",
+      "expected_output": "앉기 포즈에 필요한 본 목록(pelvis, thigh, calf, spine 등)과 조정 방향/각도, 턱 괴는 동작을 위한 upperarm/lowerarm/hand 조정, ControlNet 강도 추천(0.7-0.9 범위)을 포함해야 함",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "생성된 이미지를 봤는데 포즈는 맞는데 손이 이상하게 나왔어. 그리고 전체적으로 캐릭터 얼굴이 프롬프트랑 달라. 어떻게 고쳐야 해?",
+      "expected_output": "손 문제 해결(hand_l/r 본 조정, ControlNet 강도 조정, 추가 프롬프트 힌트), 얼굴 프롬프트 개선 방법, 워크플로우 재실행 조언을 포함해야 함",
+      "files": []
+    }
+  ]
+}

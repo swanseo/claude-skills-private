@@ -1,0 +1,32 @@
+{
+  "eval_id": 1,
+  "eval_name": "ballet-pose-transfer",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "Bone values in [X,Y,Z] format for thigh and upperarm bones",
+      "passed": false,
+      "evidence": "Mentions bones but gives only rough descriptions, no concrete JSON values"
+    },
+    {
+      "text": "SDXL positive prompt includes blue dress and anime character",
+      "passed": true,
+      "evidence": "Prompt: anime illustration, 1girl, 20s, full body, blue dress, ballet pose"
+    },
+    {
+      "text": "ControlNet strength value in 0.7-1.0 range specified",
+      "passed": true,
+      "evidence": "States ControlNet strength 0.8 is appropriate"
+    },
+    {
+      "text": "Step-by-step workflow execution order provided",
+      "passed": true,
+      "evidence": "5-step guide covering reference input, DWPose, prompt, settings, execution"
+    },
+    {
+      "text": "Node IDs from actual workflow JSON referenced (ID 6, ID 9, ID 11, etc.)",
+      "passed": false,
+      "evidence": "Does not reference specific node IDs; refers to nodes by descriptive names only"
+    }
+  ]
+}

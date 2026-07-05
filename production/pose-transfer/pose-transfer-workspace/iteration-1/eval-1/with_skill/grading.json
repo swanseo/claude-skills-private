@@ -1,0 +1,32 @@
+{
+  "eval_id": 1,
+  "eval_name": "ballet-pose-transfer",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "text": "Bone values in [X,Y,Z] format for thigh and upperarm bones",
+      "passed": true,
+      "evidence": "Full JSON with all 20 bones: thigh_r Z:95, upperarm_l Z:80, upperarm_r Z:-80"
+    },
+    {
+      "text": "SDXL positive prompt includes blue dress and anime character",
+      "passed": true,
+      "evidence": "Prompt: anime illustration, 1girl, 20s, blue dress, flowing blue dress, elegant ballgown"
+    },
+    {
+      "text": "ControlNet strength value in 0.7-1.0 range specified",
+      "passed": true,
+      "evidence": "ControlNet strength 0.9 recommended with reasoning for ballet pose fidelity"
+    },
+    {
+      "text": "Step-by-step workflow execution order provided",
+      "passed": true,
+      "evidence": "11-step execution sequence from ComfyUI startup through bone editing to result check"
+    },
+    {
+      "text": "Node IDs from actual workflow JSON referenced (ID 6, ID 9, ID 11, etc.)",
+      "passed": true,
+      "evidence": "References node IDs 2, 6, 7, 8, 9, 10, 11, 13 with correct roles"
+    }
+  ]
+}
