@@ -1,18 +1,41 @@
-# OS
+# --- 민감 정보 (절대 커밋 금지) ---
+.credentials.json
+mcp-needs-auth-cache.json
+
+# --- 기기별 로컬 상태 (세션, 캐시, 임시 파일) ---
+backups/
+cache/
+debug/
+downloads/
+history.jsonl
+ide/
+plugins/
+projects/
+scheduled-tasks/
+session-env/
+sessions/
+shell-snapshots/
+tasks/
+.last-cleanup
+.last-update-result.json
+
+# --- 기기별 설정 (윈도우 전용 경로/훅 포함 — 맥과 공유 불가) ---
+settings.json
+settings.local.json
+
+# --- 중복 백업 ---
+skills.backup.*
+
+# --- OS / 에디터 ---
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# 에디터
 .vscode/
 .idea/
 *.swp
 *~
 
-# 임시 파일
+# --- 임시 파일 ---
 *.tmp
 *.log
 *.bak
-
-# 대용량 데이터베이스 (필요 시 개별 예외 처리)
-# *.json 은 원칙적으로 포함, 5MB 이상만 제외
