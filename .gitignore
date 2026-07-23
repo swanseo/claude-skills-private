@@ -5,10 +5,12 @@ mcp-needs-auth-cache.json
 # --- 기기별 로컬 상태 (세션, 캐시, 임시 파일) ---
 backups/
 cache/
+chrome/
 debug/
 downloads/
 history.jsonl
 ide/
+plans/
 plugins/
 projects/
 scheduled-tasks/
@@ -16,6 +18,7 @@ session-env/
 sessions/
 shell-snapshots/
 tasks/
+telemetry/
 .last-cleanup
 .last-update-result.json
 
