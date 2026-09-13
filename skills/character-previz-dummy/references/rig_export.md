@@ -12,8 +12,8 @@
 ```python
 ROOT = r"D:\Google\Works-Drive\Claude\image-to-3D"
 for f in (r"pipeline\fit_tools.py", r"pipeline\rig_tools.py"): exec(open(ROOT + "\\" + f, encoding="utf-8").read())
-arm = find_armature(); body = bpy.data.objects["CC_Base_Body"]
-suit = append_suit(ROOT + r"\out\<TAG>\<TAG>_work.blend", "<TAG>_suit")      # 잔차 <2mm 게이트 (바디 재내보내기 시 WAR 7mm 균일 이동도 여기서 흡수)
+arm = find_armature(); body = bpy.data.objects["CC_Base_Body"]                # ★ append 전에 뼈대를 잡아 둔다
+suit = append_suit(ROOT + r"\out\<TAG>\<TAG>_work.blend", "<TAG>_suit", arm)  # 잔차 <2mm 게이트 (바디 재내보내기 시 WAR 7mm 균일 이동도 여기서 흡수)
 attach_and_transfer(suit, arm, "<tag>_suit_mat")                              # 미할당 0 이어야 함
 fix_weights(suit, facial_head_above_z=None, save_pkl=ROOT + r"\out\<TAG>\<TAG>_weights_transfer.pkl")
 bpy.ops.wm.save_as_mainfile(filepath=ROOT + r"\out\<TAG>\<TAG>_CC4_rig.blend")

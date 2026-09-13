@@ -12,6 +12,7 @@ description: >
 
 검증: 2026-09-13 VAE(판갑 슈트)·WAR(맨살+장비)·MUM-B(붕대 슈트)·MUM-A(붕대+후드)·ALD(판갑+칼라) 5종 완성, 사용자가 CC4 모션까지 확인.
 원본 기록: `D:\Google\Works-Drive\Claude\image-to-3D\HANDOFF.md` ⑧~⑬ (수치·실패 이력 전부). 이 스킬은 거기서 확정된 절차만 뽑은 것이다.
+플랫폼 제한(CC4 는 Windows 전용, 맥은 Blender 까지)은 §6 — 맥에서 열었으면 §6 부터 읽는다.
 
 ## 경로
 
@@ -96,6 +97,26 @@ description: >
 - 렌더는 Read 로 직접 보고 판단한다. 수치만으로 채택하지 않는다(발 돌출률 수치는 발바닥 레이가 섞여 과대).
 - 사용자에게 산출물을 알릴 때: 폴더 경로를 한 줄로 출력 + 파일 용도 표 (폴더 열기 도구 쓰지 않음). 한국어.
 - 결정·수치·실패는 `HANDOFF.md` 에 캐릭터 절(⑬ 형식)로 즉시 기록.
+
+## 6. 플랫폼 — Windows 전용 단계와 macOS 에서 가능한 단계
+
+Reallusion 툴(CC4·iClone)은 **macOS 판이 없다.** 맥에서는 Blender 까지만 할 수 있고, 바디를 내보내고 결과를 확인하는 단계는 Windows 에서 해야 한다.
+
+| 단계 | Windows | macOS | 비고 |
+|---|---|---|---|
+| 1 바디 내보내기 (CC4 Export Character to Blender) | O | **X** | 맥 작업 전에 Windows 에서 `out/<TAG>/<BODY>_body_src/` 까지 만들어 Drive 로 동기화해 둔다 |
+| 1 바디 렌더·패치 (Blender) | O | O | CC/iC Blender Tools 애드온을 맥 Blender 에도 설치 (Blender 애드온이라 OS 무관, 경로는 `~/Library/Application Support/Blender/<버전>/scripts/addons/`) |
+| 2 이미지 생성 (로컬 ComfyUI → Kling) | O | △ | 맥 ComfyUI 엔진 미설치(`Comfyui\CLAUDE.md` 표). Kling CLI 는 node 만 있으면 됨 |
+| 3 Meshy | O | O | `.env` 의 키는 Drive 로 같이 옴 |
+| 4 정렬·보정·절단 (Blender) | O | O | Blender MCP 를 맥에서도 연결해야 `execute_blender_code` 가 된다 |
+| 5 리깅 (CC/iC Tools ADD_PBR·TRANSFER_WEIGHTS) | O | O | 애드온 기능이라 맥에서도 됨. 단 검사 렌더까지만 — CC4 모션 확인은 불가 |
+| 6 EXPORT_CC3 | O | O | 결과 FBX 세트를 Drive 로 Windows 에 넘긴다 |
+| 7·8 CC4 Import → Cloth → 바디 숨김 → 모션 확인·피드백 | O | **X** | 반드시 Windows. 파편 삭제 요청도 CC4 재내보내기가 필요하므로 Windows 왕복 |
+| 9 납품 | O | O | `deliver.py` 는 `PREVIZ_ASSETS` 로 맥 Drive 경로 지정 |
+
+- 맥 세션 시작 시 확인: (1) `out/<TAG>/<BODY>_body_src/` 가 있는가 (2) Blender 애드온·MCP 동작 (3) 작업 폴더 경로 — 스크립트의 Windows 예시 경로(`D:\Google\Works-Drive\...`)는 맥 Drive 마운트 경로로 바꿔 읽는다. `pipeline/` 코드는 경로를 인자로 받고 임시 폴더는 `tempfile` 을 쓰므로 그대로 실행된다.
+- 두 컴퓨터에서 같은 blend 를 동시에 열지 않는다(Drive 충돌 사본). 맥에서 만든 `_CC4_rig.blend`·export FBX 는 Windows 에서 CC4 확인 전까지 "미확인"으로 표시한다.
+- "완료" 판정은 CC4 모션 확인이 기준이므로 **맥에서는 어떤 캐릭터도 완료로 기록하지 않는다** — HANDOFF 에 "Blender 까지, CC4 확인 대기(Windows)" 로 적는다.
 
 ## references
 
